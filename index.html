@@ -29,7 +29,7 @@ html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--wall);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 40px;
   -webkit-tap-highlight-color:transparent}
-body.has-bar{padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))}
+body.has-bar{padding-bottom:calc(110px + env(safe-area-inset-bottom,0px))}
 img{max-width:100%}
 [hidden]{display:none!important}
 main{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
@@ -105,6 +105,31 @@ button:focus-visible,input:focus-visible,label:focus-visible{outline:3px solid v
 .famcard.empty{border-style:dashed;padding:18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
 .famcard.empty .glyph{font-size:2.4rem}
 .famcard input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+/* barre d'onglets */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:15;display:grid;grid-template-columns:repeat(5,1fr);align-items:end;
+  background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 18px rgba(28,42,49,.08);
+  padding:6px max(4px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(4px,env(safe-area-inset-left,0px))}
+.tab{display:flex;flex-direction:column;align-items:center;gap:1px;font-size:.7rem;font-weight:800;color:var(--ink-soft);padding:4px 0;border-radius:12px}
+.tab span{font-size:1.45rem;line-height:1.1;filter:grayscale(.6);opacity:.75}
+.tab.on{color:var(--ink)}.tab.on span{filter:none;opacity:1}
+.shootbtn{justify-self:center;position:relative;width:72px;height:72px;margin-top:-30px;border-radius:50%;background:var(--coral);display:grid;place-items:center;
+  font-size:2rem;box-shadow:0 0 0 5px var(--card),0 6px 0 5px var(--coral-2),0 10px 22px rgba(0,0,0,.25);cursor:pointer}
+.shootbtn:active{transform:translateY(3px)}
+.shootbtn input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+/* en-tête de l'album */
+.hero{display:flex;gap:12px;align-items:center}
+.hero .grow{flex:1;min-width:0}
+.famchip{position:relative;width:76px;height:76px;flex:none;border-radius:16px;border:2px dashed var(--line);background:var(--card);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;cursor:pointer;overflow:hidden;text-align:center;line-height:1.05}
+.famchip span{font-size:1.6rem}.famchip small{font-size:.62rem;font-weight:800;color:var(--ink-soft)}
+.famchip.has{border:3px solid var(--gold-2)}.famchip img{width:100%;height:100%;object-fit:cover}
+.famchip input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.tip{margin:0;background:var(--card);border-radius:14px;padding:12px 14px;font-weight:700;border:2px solid var(--line)}
+/* mode d'emploi */
+.intro{min-height:calc(100vh - 60px);display:flex;flex-direction:column;justify-content:center;max-width:420px;margin:0 auto;gap:18px;text-align:center;align-items:center}
+.intro .hero-ico{font-size:5rem;line-height:1}
+.intro p{max-width:30ch;margin:0;font-size:1.05rem}
+.dots{display:flex;gap:8px}.dots span{width:10px;height:10px;border-radius:50%;background:var(--line)}.dots span.on{background:var(--ink)}
 /* catégorie */
 .cat-head{display:flex;gap:14px;align-items:center}
 .cat-head .glyph{font-size:3.4rem;line-height:1;width:76px;height:76px;border-radius:50%;background:var(--card);display:grid;place-items:center;flex:none;
@@ -173,7 +198,7 @@ button:focus-visible,input:focus-visible,label:focus-visible{outline:3px solid v
 .podium{display:flex;flex-direction:column;gap:8px}
 #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--wall);
   padding:10px 16px;border-radius:14px;font-weight:800;z-index:40;max-width:calc(100% - 32px);text-align:center}
-body.has-bar #toast{bottom:calc(120px + env(safe-area-inset-bottom,0px))}
+body.has-bar #toast{bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
 @media (prefers-reduced-motion:reduce){.frame.pop{animation:none}}
 @media (min-width:600px){.wall{grid-template-columns:repeat(3,minmax(0,1fr))}.thumbs{grid-template-columns:repeat(4,minmax(0,1fr))}.catpick{grid-template-columns:repeat(3,minmax(0,1fr))}}
@@ -181,7 +206,7 @@ canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
 </head>
 <body>
 <main id="app"></main>
-<div id="bar" class="bar" hidden></div>
+<div id="bar" hidden></div>
 <div id="sheet"></div>
 <canvas id="confetti" hidden></canvas>
 
@@ -494,7 +519,8 @@ function podiumHTML(M){
      <span class="starline" style="font-size:1.3rem">${'<span class="star on">★</span>'.repeat(wins[m.id])||'<small class="note">pas cette fois</small>'}</span></div>`).join('')}</div></div>`;
 }
 let installEvt=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(view.name==='setup')render()});
-let view=S.setupDone?{name:'home'}:{name:'setup'};
+if(S.onboarded===undefined)S.onboarded=!!S.setupDone;
+let view=!S.onboarded?{name:'intro',step:0}:S.setupDone?{name:'home'}:{name:'setup'};
 let sheet=null; let pending=null; let confirmKey=null; let popId=null;
 function go(v){if(canSpeak&&speakingKey){speechSynthesis.cancel();speakingKey=null}view=v;sheet=null;confirmKey=null;ready=null;busy=null;render();window.scrollTo(0,0)}
 function phase(){if(view.name==='setup')return 0;if(view.name==='vote'||view.name==='ballot')return 2;if(view.name==='final')return 3;return 1}
@@ -519,17 +545,28 @@ function homeView(){
       <span class="cartel">${esc(c.name)}</span>
       ${c.photos.length>1?`<span class="count">${c.photos.length}</span>`:''}
     </button>`}).join('');
-  const nb=S.cats.reduce((a,c)=>a+c.photos.length,0);
-  return `${stepsBar()}
-    <div class="top"><div><div class="eyebrow">Notre visite</div><h1>${esc(S.title)}</h1></div>
-      <div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn ghost small" data-go="carnet">📖 Carnet</button><button class="btn ghost small" data-go="setup">Préparer</button></div></div>
+  const nb=S.cats.reduce((a,c)=>a+c.photos.length,0),fp=S.familyPhoto;
+  return `<header class="hero">
+      <div class="grow"><div class="eyebrow">${nb?'Visite en cours':'Prêts pour la visite'}</div><h1>${esc(S.title)}</h1></div>
+      <label class="famchip ${fp?'has':''}" aria-label="Photo de famille">${fp?`<img data-pid="${fp.id}" alt="">`:'<span>📸</span><small>Photo de<br>famille</small>'}
+        <input type="file" id="famcam" accept="image/*"></label>
+    </header>
     ${starsBlock()}
     <section class="wall">${frames}</section>
-    ${famCard(currentModel(),true)}
-    <button class="btn ghost" data-go="hunts">🧭 Jeu de piste des chefs-d'œuvre</button>
-    <button class="btn big" data-go="vote" ${nb?'':'disabled'}>Fini ! On vote</button>
-    <button class="btn ghost" data-sharesheet>📲 Mettre en commun avec l'autre téléphone</button>
-    <p class="note">Repérez une œuvre, prenez-la en photo, rangez-la dans un cadre. Sans flash !</p>`;
+    ${nb?`<button class="btn big" data-go="vote">Fini ! On vote 🗳️</button>`
+       :`<p class="tip">👇 Repérez une œuvre qui va dans un cadre, puis touchez le gros bouton photo. Sans flash !</p>`}`;
+}
+const INTRO=[
+  ['🏛️','Un album à remplir au musée',"Avant de partir, on choisit ensemble les cadres : la plus rigolote, celle qui fait peur, la plus belle…"],
+  ['📷','On photographie, on range',"Au musée, quelqu'un repère une œuvre ? Gros bouton photo, on choisit le cadre et qui l'a trouvée. Chaque cadre rempli donne une étoile."],
+  ['🗳️','On vote, on garde',"À la fin, chacun vote en secret pour la photo qu'on garde dans chaque cadre. L'album va dans le carnet, et on peut en faire un PDF."],
+  ['🧭','Bonus : le jeu de piste',"Pour le musée de Grenoble, des cartes font chercher les chefs-d'œuvre avec de petites missions. Le bouton 🔊 les lit aux enfants."]];
+function introView(){
+  const k=view.step||0,[ic,t,p]=INTRO[k],last=k===INTRO.length-1;
+  return `<section class="intro"><span class="hero-ico" aria-hidden="true">${ic}</span><h1>${t}</h1><p>${p}</p>
+    <div class="dots">${INTRO.map((_,i)=>`<span class="${i===k?'on':''}"></span>`).join('')}</div>
+    <button class="btn big coral" data-introstep="${last?'done':k+1}">${last?(S.setupDone?'Retour à l’appli':'Préparer ma première visite'):'Suivant'}</button>
+    ${last?'':`<button class="btn ghost small" data-introstep="done">Passer</button>`}</section>`;
 }
 function catView(){
   const c=cat(view.id); if(!c) return homeView();
@@ -550,7 +587,7 @@ function voteView(){
       ${w?`<span class="av" style="background:${member(w.by)?.color||'#999'}" aria-hidden="true">${esc(member(w.by)?.icon||'')}</span>`:''}
       <span class="state ${ok?'ok':''}">${ok?'✓ ':''}${st}</span></button>`}).join('');
   const nx=nextUndecided();
-  return `${stepsBar()}
+  return `
     <button class="back" data-go="home">← Retour à la visite</button>
     <div><div class="eyebrow">Le grand vote</div><h2>Quelle photo garde-t-on ?</h2></div>
     <p class="note">Chacun vote en secret, puis on découvre le résultat. On explique pourquoi on a choisi !</p>
@@ -610,7 +647,7 @@ function nextBtn(){const nx=nextUndecided();
   return nx?`<button class="btn big coral" data-vote="${nx.id}">Cadre suivant : ${esc(nx.icon)}</button>`:`<button class="btn big" data-go="final">Voir notre album</button>`}
 function finalView(){
   const M=currentModel();
-  return `${stepsBar()}
+  return `
     <button class="back" data-go="vote">← Le vote</button>
     <div><div class="eyebrow">Album terminé</div><h1>${esc(S.title)}</h1></div>
     ${starsBlock()}
@@ -676,7 +713,7 @@ function setupView(){
     <button class="icon-pick" data-pickcat="${c.id}" aria-label="Changer le pictogramme">${esc(c.icon)}</button>
     <input type="text" id="cat-${c.id}" data-catname="${c.id}" value="${esc(c.name)}" placeholder="Ex. : celle qui sent bon" aria-label="Nom du cadre">
     <button class="x ${confirmKey==='cat'+c.id?'warn':''}" data-delcat="${c.id}" aria-label="Supprimer ce cadre">${confirmKey==='cat'+c.id?'Effacer ses photos ?':'✕'}</button></div>`).join('');
-  return `${stepsBar()}
+  return `
     <div><div class="eyebrow">À la maison, avant de partir</div><h1>Préparer la visite</h1></div>
     <section class="step"><div class="row"><span class="num">1</span><h3>Quel musée ?</h3></div>
       <div class="field"><input type="text" id="title" value="${esc(S.title)}" aria-label="Nom du musée"></div></section>
@@ -690,6 +727,8 @@ function setupView(){
       <p class="note">Préparez sur un seul téléphone, puis envoyez la préparation à l'autre : les deux auront les mêmes cadres.</p>
       <button class="btn ghost small" data-sharesheet>📲 Envoyer ou recevoir un album</button></section>
     <button class="btn big coral" data-start>${S.setupDone?'Retour à la visite':"C'est parti !"}</button>
+    <section class="step"><h3>Aide</h3>
+      <button class="btn ghost small" data-go="intro">📘 Revoir le mode d'emploi</button></section>
     <section class="step"><h3>Réglages</h3>
       <label class="check" for="awake"><input type="checkbox" id="awake" ${S.keepAwake!==false?'checked':''}>Garder l'écran allumé pendant la visite</label>
       <p class="note">Plus besoin de déverrouiller le téléphone à chaque œuvre. Ça consomme un peu plus de batterie : partez chargés.</p>
@@ -784,7 +823,7 @@ function clueView(){
     ${st.hints[c.id]?`<p class="note"><strong>Indice :</strong> ${esc(c.hint)}</p>`:`<button class="btn ghost small" data-hint>💡 Un indice</button>`}
     ${f?`<section class="famcard"><img data-pid="${f.id}" alt=""><span class="famlabel">★ Trouvée${m?` par ${esc(m.icon)} ${esc(m.name)}`:''}</span></section>`:''}
     <label class="btn big ${f?'ghost':'coral'}" style="position:relative;overflow:hidden">📷 ${f?'Reprendre la photo':'Trouvé ! Je la prends en photo'}
-      <input type="file" id="huntcam" accept="image/*" capture="environment" style="position:absolute;inset:0;opacity:0;width:100%"></label>
+      <input type="file" id="huntcam2" accept="image/*" capture="environment" style="position:absolute;inset:0;opacity:0;width:100%"></label>
     ${nx?`<button class="btn ghost" data-clue="${nx.id}">Carte suivante : ${esc(nx.icon)} ${esc(nx.title)}</button>`:''}`;
 }
 
@@ -888,13 +927,17 @@ function sheetHTML(){
   }
   return '';
 }
+const TABS=[['album','🖼️','Album',['home','cat','vote','final']],['hunt','🧭','Jeu de piste',['hunts','hunt','clue']],['shoot'],['carnet','📖','Carnet',['carnet','visit']],['setup','⚙️','Préparer',['setup']]];
 function barHTML(){
-  if(!(view.name==='home'||view.name==='cat')) return '';
-  return `<label class="shoot"><span class="lens" aria-hidden="true">📷</span>Photo !
-    <input type="file" id="cam" accept="image/*" capture="environment" aria-label="Prendre une photo"></label>`;
+  if(view.name==='ballot'||view.name==='intro') return '';
+  const cam=view.name==='clue'?'huntcam':'cam';
+  return `<nav class="tabs" aria-label="Navigation">${TABS.map(t=>{
+    if(t[0]==='shoot') return `<label class="shootbtn" aria-label="Prendre une photo"><span aria-hidden="true">📷</span><input type="file" id="${cam}" accept="image/*" capture="environment"></label>`;
+    const on=t[3].includes(view.name);
+    return `<button class="tab ${on?'on':''}" data-tab="${t[0]}"><span aria-hidden="true">${t[1]}</span>${t[2]}</button>`}).join('')}</nav>`;
 }
 function render(){
-  const v={home:homeView,cat:catView,vote:voteView,ballot:ballotView,final:finalView,setup:setupView,carnet:carnetView,visit:visitView,hunts:huntsView,hunt:huntView,clue:clueView}[view.name]||homeView;
+  const v={home:homeView,cat:catView,vote:voteView,ballot:ballotView,final:finalView,setup:setupView,carnet:carnetView,visit:visitView,intro:introView,hunts:huntsView,hunt:huntView,clue:clueView}[view.name]||homeView;
   $('#app').innerHTML=v();
   const bar=barHTML();$('#bar').innerHTML=bar;$('#bar').hidden=!bar;document.body.classList.toggle('has-bar',!!bar);
   $('#sheet').innerHTML=sheetHTML();
@@ -920,6 +963,8 @@ document.addEventListener('click',e=>{
   if(sh&&e.target===sh){sheet=null;confirmKey=null;return render()}
   const t=e.target.closest('button'); if(!t||t.disabled) return;
   const d=t.dataset;
+  if(d.introstep){if(d.introstep==='done'){S.onboarded=true;save();return go({name:S.setupDone?'home':'setup'})}view.step=+d.introstep;return render()}
+  if(d.tab){const t=d.tab;return go({name:t==='album'?'home':t==='hunt'?(view.name==='hunts'?'hunts':(S.lastHunt?'hunt':'hunts')):t,id:t==='hunt'?S.lastHunt:undefined})}
   if(d.go){if(d.go==='final'&&!S.voteCelebrated){S.voteCelebrated=true;save();setTimeout(confetti,200)} return go({name:d.go})}
   if(d.start!==undefined){S.family.forEach((m,i)=>{if(!m.name.trim())m.name='Invité '+(i+1)});S.cats.forEach(c=>{if(!c.name.trim())c.name='Cadre surprise'});S.setupDone=true;save();return go({name:'home'})}
   if(d.open) return go({name:'cat',id:d.open});
@@ -939,6 +984,7 @@ document.addEventListener('click',e=>{
     const c=cat(sheet.cat),f=pending.file,wasFilled=c.photos.length>0,wasComplete=complete();
     if(S.gallery) toGallery([f],`${slug(S.title)}-${slug(c.name)}-${stamp()}`,true);
     endCapture();
+    if(view.name!=='cat'&&view.name!=='home')view={name:'home'};
     const id=uid();c.photos.push({id,by:d.who,ts:Date.now()});c.votes={};c.winner=null;S.voteCelebrated=false;save();
     compress(f).then(b=>{putBlob(id,b);render()});
     if(!wasFilled) popId=c.id;
@@ -948,7 +994,7 @@ document.addEventListener('click',e=>{
   }
   if(d.speak){speak(speechFor(d.speak),d.speak);return}
   /* jeu de piste */
-  if(d.hunt){return go({name:'hunt',id:d.hunt})}
+  if(d.hunt){S.lastHunt=d.hunt;save();return go({name:'hunt',id:d.hunt})}
   if(d.clue){return go({name:'clue',hunt:view.hunt||view.id,id:d.clue})}
   if(d.hint!==undefined){hstate(view.hunt).hints[view.id]=1;save();return render()}
   if(d.huntwho){
@@ -1018,7 +1064,7 @@ document.addEventListener('change',e=>{
   if(e.target.id==='awake'){S.keepAwake=e.target.checked;save();updateWake();return}
   if(e.target.dataset&&e.target.dataset.tick!==undefined&&view.name==='clue'){const st=hstate(view.hunt),i=+e.target.dataset.tick,a=st.ticks[view.id]=st.ticks[view.id]||[];
     if(e.target.checked){if(!a.includes(i))a.push(i)}else st.ticks[view.id]=a.filter(x=>x!==i);save();return}
-  if(e.target.id==='huntcam'&&e.target.files[0]){const f=e.target.files[0];e.target.value='';
+  if((e.target.id==='huntcam'||e.target.id==='huntcam2')&&e.target.files[0]){const f=e.target.files[0];e.target.value='';
     pending={file:f,url:URL.createObjectURL(f)};sheet={type:'huntwho'};render();return}
   if(e.target.id==='famcam'&&e.target.files[0]){const f=e.target.files[0];e.target.value='';
     if(S.gallery) toGallery([f],`${slug(S.title)}-famille-${stamp()}`,true);
