@@ -843,7 +843,8 @@ function huntView(){
       <small>${n===h.cards.length?'Toutes les œuvres sont trouvées, bravo !':`${n} œuvre${n>1?'s':''} trouvée${n>1?'s':''} sur ${h.cards.length}`}</small></div>
       <span class="bonus ${n===h.cards.length?'on':''}" aria-hidden="true">★</span></section>
     <p class="note">${esc(h.note)} Les cartes sont dans l'ordre du parcours. Ouvrez cette page une fois avec du réseau avant la visite, pour que les images soient gardées sur le téléphone.</p>
-    <div class="list">${cards}</div>`;
+    <div class="list">${cards}</div>
+    ${n?`<button class="btn ghost small" data-resethunt="${h.id}">${confirmKey==='hunt'?'Sûr ? Touchez encore pour tout effacer':'🗑️ Recommencer le jeu (efface ses photos)'}</button>`:''}`;
 }
 function clueView(){
   const h=huntOf(view.hunt),c=h&&h.cards.find(x=>x.id===view.id);if(!c)return huntView();
@@ -1049,6 +1050,8 @@ document.addEventListener('click',e=>{
     else{S.cats.forEach(c=>c.photos.forEach(p=>delBlob(p.id)));if(S.familyPhoto)delBlob(S.familyPhoto.id);if(d.newv==='wipe')toast('Album effacé')}
     const keep=S;S=freshState(keep);S.setupDone=false;S.onboarded=true;S.lastActive=0;save();return go({name:'setup'});
   }
+  if(d.resethunt){if(confirmKey!=='hunt'){confirmKey='hunt';return render()}
+    const st=hstate(d.resethunt);Object.values(st.found).forEach(f=>delBlob(f.id));S.hunts[d.resethunt]={found:{},ticks:{},hints:{}};confirmKey=null;save();toast('Jeu remis à zéro');return render()}
   /* jeu de piste */
   if(d.hunt){S.lastHunt=d.hunt;save();return go({name:'hunt',id:d.hunt})}
   if(d.clue){return go({name:'clue',hunt:view.hunt||view.id,id:d.clue})}
