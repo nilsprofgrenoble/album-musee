@@ -1,5 +1,5 @@
 // Album du musée : fonctionne sans réseau une fois ouvert une première fois.
-const VERSION = 'album-v6';
+const VERSION = 'album-v7';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

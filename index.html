@@ -189,7 +189,7 @@ function freshState(prev){
     title: prev?prev.title:'Musée de Grenoble',
     family: prev?prev.family:[['Papa','🦊'],['Maman','🐻'],['Enfant 1','🐰'],['Enfant 2','🐼']].map(([n,i],k)=>({id:uid(),name:n,icon:i,color:COLORS[k]})),
     cats: (prev?prev.cats.map(c=>[c.icon,c.name]):DEFAULT_CATS).map(([i,n])=>({id:uid(),icon:i,name:n,photos:[],votes:{},winner:null})),
-    celebrated:false, voteCelebrated:false, gallery: prev?prev.gallery!==false:true, setupDone: prev?!!prev.setupDone:false
+    celebrated:false, voteCelebrated:false, gallery: prev?prev.gallery!==false:true, setupDone: prev?!!prev.setupDone:false, archive: prev?(prev.archive||[]):[]
   };
 }
 /* ---------- stockage (mêmes clés que la version précédente) ---------- */
@@ -197,6 +197,7 @@ let S;
 try{S=JSON.parse(localStorage.getItem('albumMusee')||'null')}catch(e){S=null}
 if(!S) S=freshState();
 if(S.gallery===undefined) S.gallery=true;
+if(!Array.isArray(S.archive)) S.archive=[];
 if(S.setupDone===undefined) S.setupDone=S.cats.some(c=>c.photos.length);
 S.family.forEach((m,i)=>{if(!m.icon)m.icon=ANIMALS[i%ANIMALS.length]});
 function save(){try{localStorage.setItem('albumMusee',JSON.stringify(S))}catch(e){}}
@@ -248,18 +249,18 @@ function prepareExport(){exportFile=null;const g=++exportGen;
     if(b){b.disabled=false;b.textContent='📤 Envoyer mon album'}}).catch(()=>{const b=document.querySelector('[data-export]');if(b)b.textContent='Erreur, fermez et réessayez'})}
 let toastT;function toast(m){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';document.body.appendChild(t)}
   t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2800)}
-async function albumImage(){
+async function albumImage(M){
   const W=1080,pad=48,colW=(W-pad*3)/2,picH=colW,capH=96,rowH=picH+capH+44;
-  const cats=S.cats.filter(c=>c.photos.length);
+  const cats=M.cats.filter(c=>c.photo);
   const rows=Math.ceil(cats.length/2),H=230+rows*rowH+60;
   const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
   x.fillStyle='#E4ECEE';x.fillRect(0,0,W,H);
   try{await document.fonts.ready}catch(e){}
-  x.fillStyle='#56666E';x.font='800 26px Nunito,sans-serif';x.fillText(new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}).toUpperCase(),pad,80);
-  x.fillStyle='#1C2A31';x.font='800 64px "Baloo 2",sans-serif';x.fillText(S.title,pad,150);
-  x.fillStyle='#B7821C';x.font='700 30px Nunito,sans-serif';x.fillText('★'.repeat(filled())+(complete()?'  Album complet !':''),pad,200);
+  x.fillStyle='#56666E';x.font='800 26px Nunito,sans-serif';x.fillText(fdate(M.date).toUpperCase(),pad,80);
+  x.fillStyle='#1C2A31';x.font='800 64px "Baloo 2",sans-serif';x.fillText(M.title,pad,150);
+  x.fillStyle='#B7821C';x.font='700 30px Nunito,sans-serif';x.fillText('★'.repeat(M.stars)+(M.stars===M.total?'  Album complet !':''),pad,200);
   for(let i=0;i<cats.length;i++){
-    const ct=cats[i],p=winnerOf(ct)||ct.photos[ct.photos.length-1];
+    const ct=cats[i],p=ct.photo;
     const cx=pad+(i%2)*(colW+pad),cy=230+Math.floor(i/2)*rowH;
     x.fillStyle='#E2B550';x.fillRect(cx-14,cy-14,colW+28,picH+capH+28);
     x.fillStyle='#B7821C';x.fillRect(cx-8,cy-8,colW+16,picH+capH+16);
@@ -270,7 +271,7 @@ async function albumImage(){
     x.fillStyle='#1C2A31';x.font='800 28px Nunito,sans-serif';
     let t=`${ct.icon} ${ct.name}`;while(x.measureText(t).width>colW-24&&t.length>4)t=t.slice(0,-2)+'…';
     x.fillText(t,cx+12,cy+picH+30);
-    const m=member(p.by);if(m){x.fillStyle='#56666E';x.font='700 24px Nunito,sans-serif';x.fillText(`${m.icon} trouvée par ${m.name}`,cx+12,cy+picH+68)}
+    const m=M.family.find(f=>f.id===p.by);if(m){x.fillStyle='#56666E';x.font='700 24px Nunito,sans-serif';x.fillText(`${m.icon} trouvée par ${m.name}`,cx+12,cy+picH+68)}
   }
   return new Promise(r=>c.toBlob(r,'image/jpeg',.9));
 }
@@ -327,6 +328,30 @@ const winnerOf=c=>c.photos.find(p=>p.id===c.winner)||(c.photos.length===1?c.phot
 const decided=c=>!c.photos.length||!!winnerOf(c);
 const coverOf=c=>winnerOf(c)||c.photos[c.photos.length-1];
 const nextUndecided=()=>S.cats.find(c=>!decided(c));
+function currentModel(){const all=S.cats.flatMap(c=>c.photos);
+  return {id:'',title:S.title,date:all.length?Math.min(...all.map(p=>p.ts)):Date.now(),family:S.family,stars:filled(),total:S.cats.length,
+    cats:S.cats.map(c=>({icon:c.icon,name:c.name,photos:c.photos,photo:winnerOf(c)}))}}
+function visitModel(v){return {id:v.id,title:v.title,date:v.date,family:v.family,stars:v.stars,total:v.total,
+    cats:v.cats.map(c=>({icon:c.icon,name:c.name,photos:c.photos,photo:c.photos.find(p=>p.id===c.winner)||c.photos[c.photos.length-1]||null}))}}
+function archiveCurrent(){
+  const all=S.cats.flatMap(c=>c.photos); if(!all.length) return false;
+  S.archive.unshift({id:uid(),title:S.title,date:Math.min(...all.map(p=>p.ts)),stars:filled(),total:S.cats.length,
+    family:S.family.map(m=>({id:m.id,name:m.name,icon:m.icon,color:m.color})),
+    cats:S.cats.filter(c=>c.photos.length).map(c=>({icon:c.icon,name:c.name,photos:c.photos.map(p=>({id:p.id,by:p.by,ts:p.ts})),winner:(winnerOf(c)||coverOf(c)).id}))});
+  return true;
+}
+const fdate=t=>new Date(t).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+function framesHTML(M){
+  return `<section class="wall">${M.cats.map(c=>{const p=c.photo,m=p&&M.family.find(x=>x.id===p.by);
+    return `<div class="frame ${p?'':'empty'}"><span class="pic">${p?`<img data-pid="${p.id}" alt="">`:`<span class="glyph">${esc(c.icon)}</span>`}</span>
+      ${p?`<span class="chip" aria-hidden="true">${esc(c.icon)}</span>`:''}
+      <span class="cartel">${esc(c.name)}</span>${m?`<span class="row" style="gap:6px">${av(m)}<small><strong>${esc(m.name)}</strong></small></span>`:''}</div>`}).join('')}</section>`;
+}
+function podiumHTML(M){
+  const wins={};M.family.forEach(m=>wins[m.id]=0);M.cats.forEach(c=>{if(c.photo&&wins[c.photo.by]!==undefined)wins[c.photo.by]++});
+  return `<div><h3 style="margin-bottom:8px">Qui a trouvé les photos gagnantes</h3><div class="podium">${M.family.slice().sort((a,b)=>wins[b.id]-wins[a.id]).map(m=>`<div class="item">${av(m)}<span class="grow">${esc(m.name)}</span>
+     <span class="starline" style="font-size:1.3rem">${'<span class="star on">★</span>'.repeat(wins[m.id])||'<small class="note">pas cette fois</small>'}</span></div>`).join('')}</div></div>`;
+}
 let installEvt=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(view.name==='setup')render()});
 let view=S.setupDone?{name:'home'}:{name:'setup'};
 let sheet=null; let pending=null; let confirmKey=null; let popId=null;
@@ -356,7 +381,7 @@ function homeView(){
   const nb=S.cats.reduce((a,c)=>a+c.photos.length,0);
   return `${stepsBar()}
     <div class="top"><div><div class="eyebrow">Notre visite</div><h1>${esc(S.title)}</h1></div>
-      <button class="btn ghost small" data-go="setup">Préparer</button></div>
+      <div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn ghost small" data-go="carnet">📖 Carnet</button><button class="btn ghost small" data-go="setup">Préparer</button></div></div>
     ${starsBlock()}
     <section class="wall">${frames}</section>
     <button class="btn big" data-go="vote" ${nb?'':'disabled'}>Fini ! On vote</button>
@@ -439,22 +464,44 @@ function ballotView(){
 function nextBtn(){const nx=nextUndecided();
   return nx?`<button class="btn big coral" data-vote="${nx.id}">Cadre suivant : ${esc(nx.icon)}</button>`:`<button class="btn big" data-go="final">Voir notre album</button>`}
 function finalView(){
-  const wins={};S.family.forEach(m=>wins[m.id]=0);
-  const frames=S.cats.map(c=>{
-    const p=winnerOf(c);if(p&&wins[p.by]!==undefined)wins[p.by]++;
-    return `<div class="frame ${p?'':'empty'}"><span class="pic">${p?`<img data-pid="${p.id}" alt="">`:`<span class="glyph">${esc(c.icon)}</span>`}</span>
-      ${p?`<span class="chip" aria-hidden="true">${esc(c.icon)}</span>`:''}
-      <span class="cartel">${esc(c.name)}</span>${p?`<span class="row" style="gap:6px">${av(member(p.by))}<small><strong>${esc(member(p.by)?.name||'')}</strong></small></span>`:''}</div>`}).join('');
-  const pod=S.family.slice().sort((a,b)=>wins[b.id]-wins[a.id]).map(m=>`<div class="item">${av(m)}<span class="grow">${esc(m.name)}</span>
-     <span class="starline" style="font-size:1.3rem">${'<span class="star on">★</span>'.repeat(wins[m.id])||'<small class="note">pas cette fois</small>'}</span></div>`).join('');
+  const M=currentModel();
   return `${stepsBar()}
     <button class="back" data-go="vote">← Le vote</button>
     <div><div class="eyebrow">Album terminé</div><h1>${esc(S.title)}</h1></div>
     ${starsBlock()}
-    <section class="wall">${frames}</section>
-    <div><h3 style="margin-bottom:8px">Qui a trouvé les photos gagnantes</h3><div class="podium">${pod}</div></div>
-    <div class="list"><button class="btn big" data-exportalbum>Enregistrer l'album en image</button>
-      <button class="btn ghost" data-exportall>Enregistrer toutes les photos</button></div>`;
+    ${framesHTML(M)}
+    ${podiumHTML(M)}
+    <div class="list"><button class="btn big" data-exportalbum="">Enregistrer l'album en image</button>
+      <button class="btn ghost" data-exportall="">Enregistrer toutes les photos</button>
+      <button class="btn big coral" data-tocarnet>${confirmKey==='carnet'?'Touchez encore pour ranger':'📖 Ranger dans le carnet'}</button></div>
+    <p class="note">L'album rejoint le carnet des visites avec toutes ses photos, et une nouvelle visite commence avec la même famille et les mêmes cadres.</p>`;
+}
+function carnetView(){
+  const cards=S.archive.map(v=>{const M=visitModel(v),pics=M.cats.filter(c=>c.photo).slice(0,4);
+    return `<button class="item" data-visit="${v.id}" style="align-items:stretch">
+      <span style="display:grid;grid-template-columns:1fr 1fr;gap:3px;width:86px;height:86px;flex:none;border-radius:8px;overflow:hidden;box-shadow:0 0 0 3px var(--gold-2)">
+        ${pics.map(c=>`<img data-pid="${c.photo.id}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`).join('')}</span>
+      <span class="grow" style="display:flex;flex-direction:column;justify-content:center;gap:2px">
+        <span style="font-family:var(--display);font-size:1.15rem;line-height:1.15">${esc(v.title)}</span>
+        <span class="note">${fdate(v.date)}</span>
+        <span style="color:var(--gold);font-size:.95rem">${'★'.repeat(v.stars)}${v.stars===v.total?' <small style="color:var(--ink-soft)">complet</small>':''}</span></span></button>`}).join('');
+  return `<button class="back" data-go="home">← Visite en cours</button>
+    <div><div class="eyebrow">Nos musées</div><h1>Le carnet des visites</h1></div>
+    ${S.archive.length?`<div class="list">${cards}</div>`:
+      `<div class="empty-state"><span class="glyph">📖</span><strong>Le carnet est encore vide</strong><span class="note">À la fin d'une visite, après le vote, touchez « Ranger dans le carnet ».</span></div>`}`;
+}
+function visitView(){
+  const v=S.archive.find(x=>x.id===view.id); if(!v) return carnetView();
+  const M=visitModel(v);
+  return `<button class="back" data-go="carnet">← Le carnet</button>
+    <div><div class="eyebrow">${fdate(v.date)}</div><h1>${esc(v.title)}</h1></div>
+    <section class="stars"><div class="grow"><div class="starline">${'<span class="star on">★</span>'.repeat(v.stars)}${'<span class="star">★</span>'.repeat(Math.max(0,v.total-v.stars))}</div>
+      <small>${v.stars===v.total?'Album complet':`${v.stars} cadres remplis sur ${v.total}`}</small></div><span class="bonus ${v.stars===v.total?'on':''}" aria-hidden="true">★</span></section>
+    ${framesHTML(M)}
+    ${podiumHTML(M)}
+    <div class="list"><button class="btn big" data-exportalbum="${v.id}">Enregistrer l'album en image</button>
+      <button class="btn ghost" data-exportall="${v.id}">Enregistrer toutes les photos</button>
+      <button class="btn ghost" data-delvisit="${v.id}">${confirmKey==='del'+v.id?'Touchez encore : supprimer définitivement':'Supprimer cette visite'}</button></div>`;
 }
 function setupView(){
   const fam=S.family.map(m=>`<div class="field">
@@ -483,7 +530,7 @@ function setupView(){
       <label class="check" for="gal"><input type="checkbox" id="gal" ${S.gallery?'checked':''}>Enregistrer aussi chaque photo dans la galerie du téléphone</label>
       <p class="note">${IOS?"Sur iPhone, une fenêtre s'ouvre après chaque photo : touchez « Enregistrer l'image ».":"Sur Android, les photos arrivent dans la galerie, dossier Téléchargements."}</p>
       ${installEvt?`<button class="btn" data-install>Installer sur l'écran d'accueil</button>`:`<p class="note"><strong>Pour l'avoir sans réseau au musée :</strong> ${IOS?"dans Safari, Partager puis « Sur l'écran d'accueil ».":"dans Chrome, menu ⋮ puis « Ajouter à l'écran d'accueil »."}</p>`}
-      <button class="btn ghost" data-reset>${confirmKey==='reset'?'Touchez encore : tout effacer':'Nouvelle visite (efface photos et votes)'}</button></section>`;
+      <button class="btn ghost" data-reset>${confirmKey==='reset'?'Touchez encore pour confirmer':'Nouvelle visite (l’album actuel va dans le carnet)'}</button></section>`;
 }
 /* ---------- feuilles ---------- */
 function sheetHTML(){
@@ -547,7 +594,7 @@ function barHTML(){
     <input type="file" id="cam" accept="image/*" capture="environment" aria-label="Prendre une photo"></label>`;
 }
 function render(){
-  const v={home:homeView,cat:catView,vote:voteView,ballot:ballotView,final:finalView,setup:setupView}[view.name]||homeView;
+  const v={home:homeView,cat:catView,vote:voteView,ballot:ballotView,final:finalView,setup:setupView,carnet:carnetView,visit:visitView}[view.name]||homeView;
   $('#app').innerHTML=v();
   const bar=barHTML();$('#bar').innerHTML=bar;$('#bar').hidden=!bar;document.body.classList.toggle('has-bar',!!bar);
   $('#sheet').innerHTML=sheetHTML();
@@ -598,6 +645,14 @@ document.addEventListener('click',e=>{
     return render();
   }
   /* vote */
+  if(d.visit) return go({name:'visit',id:d.visit});
+  if(d.tocarnet!==undefined){
+    if(confirmKey!=='carnet'){confirmKey='carnet';return render()}
+    archiveCurrent();const keep=S;S=freshState(keep);S.setupDone=true;save();toast('Album rangé dans le carnet 📖');return go({name:'carnet'})}
+  if(d.delvisit){
+    if(confirmKey!=='del'+d.delvisit){confirmKey='del'+d.delvisit;return render()}
+    const v=S.archive.find(x=>x.id===d.delvisit);if(v)v.cats.forEach(c=>c.photos.forEach(p=>delBlob(p.id)));
+    S.archive=S.archive.filter(x=>x.id!==d.delvisit);save();return go({name:'carnet'})}
   if(d.sharesheet!==undefined){sheet={type:'share'};prepareExport();return render()}
   if(d.export!==undefined){
     const f=exportFile; if(!f) return;
@@ -616,11 +671,12 @@ document.addEventListener('click',e=>{
   if(d.skip){const c=cat(view.id);delete c.votes[d.skip];c.skipped=Object.assign(c.skipped||{},{[d.skip]:1});save();view.ready=null;return render()}
   if(d.pickwin){const c=cat(view.id);c.winner=d.pickwin;save();setTimeout(confetti,150);return render()}
   if(d.revote){const c=cat(d.revote);c.votes={};c.skipped={};c.winner=null;S.voteCelebrated=false;save();view.ready=null;return render()}
-  if(d.exportall!==undefined){
-    Promise.all(S.cats.flatMap(c=>c.photos.map(p=>getBlob(p.id)))).then(bs=>{bs=bs.filter(Boolean);if(bs.length)toGallery(bs,`${slug(S.title)}-${stamp()}`)});return}
+  if(d.exportall!==undefined){const V=d.exportall&&S.archive.find(x=>x.id===d.exportall);
+    Promise.all((V?V.cats:S.cats).flatMap(c=>c.photos.map(p=>getBlob(p.id)))).then(bs=>{bs=bs.filter(Boolean);if(bs.length)toGallery(bs,`${slug(S.title)}-${stamp()}`)});return}
   if(d.exportalbum!==undefined){t.disabled=true;t.textContent='Préparation…';
-    albumImage().then(b=>{t.disabled=false;t.textContent="Enregistrer l'album en image";if(!b)return;
-      const f=new File([b],`album-${slug(S.title)}-${stamp()}.jpg`,{type:'image/jpeg'});
+    const V=d.exportalbum&&S.archive.find(x=>x.id===d.exportalbum);
+    albumImage(V?visitModel(V):currentModel()).then(b=>{t.disabled=false;t.textContent="Enregistrer l'album en image";if(!b)return;
+      const f=new File([b],`album-${slug(V?V.title:S.title)}-${stamp()}.jpg`,{type:'image/jpeg'});
       if(navigator.canShare&&navigator.canShare({files:[f]})) navigator.share({files:[f]}).catch(()=>{}); else {download(f,f.name);toast("Album enregistré dans la galerie")}});
     return}
   if(d.install!==undefined&&installEvt){installEvt.prompt();installEvt.userChoice.finally(()=>{installEvt=null;render()});return}
@@ -639,7 +695,7 @@ document.addEventListener('click',e=>{
     c.photos.forEach(p=>delBlob(p.id));S.cats=S.cats.filter(x=>x.id!==c.id);confirmKey=null;save();return render()}
   if(d.reset!==undefined){
     if(confirmKey!=='reset'){confirmKey='reset';return render()}
-    clearBlobs();const keep=S;S=freshState(keep);S.setupDone=false;save();return go({name:'setup'});
+    archiveCurrent();const keep=S;S=freshState(keep);S.setupDone=false;save();return go({name:'setup'});
   }
 });
 document.addEventListener('change',e=>{
