@@ -105,6 +105,16 @@ button:focus-visible,input:focus-visible,label:focus-visible{outline:3px solid v
 .famcard.empty{border-style:dashed;padding:18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
 .famcard.empty .glyph{font-size:2.4rem}
 .famcard input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+/* accueil */
+.visitcard{background:var(--card);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:12px;border:2px solid var(--line);box-shadow:0 8px 20px rgba(28,42,49,.08)}
+.vthumb{width:76px;height:76px;border-radius:14px;object-fit:cover;flex:none;box-shadow:0 0 0 3px var(--gold-2)}
+span.vthumb{display:grid;place-items:center;font-size:2.4rem;background:var(--wall)}
+.visitcard small.note{display:block}
+.vstars{display:block;color:var(--gold-2);font-size:1.15rem;letter-spacing:1px;text-shadow:0 1px 0 var(--gold)}.vstars span{color:var(--line);text-shadow:none}
+.how{display:flex;flex-direction:column;gap:10px}
+.howrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.howrow div{background:var(--card);border-radius:16px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;border:2px solid var(--line)}
+.howrow span{font-size:1.8rem}.howrow strong{font-size:.85rem}.howrow small{font-size:.72rem;color:var(--ink-soft);font-weight:700;line-height:1.2}
 /* barre d'onglets */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:15;display:grid;grid-template-columns:repeat(5,1fr);align-items:end;
   background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 18px rgba(28,42,49,.08);
@@ -225,7 +235,7 @@ function freshState(prev){
     title: prev?prev.title:'Musée de Grenoble',
     family: prev?prev.family:[['Papa','🦊'],['Maman','🐻'],['Enfant 1','🐰'],['Enfant 2','🐼']].map(([n,i],k)=>({id:uid(),name:n,icon:i,color:COLORS[k]})),
     cats: (prev?prev.cats.map(c=>[c.icon,c.name]):DEFAULT_CATS).map(([i,n])=>({id:uid(),icon:i,name:n,photos:[],votes:{},winner:null})),
-    celebrated:false, voteCelebrated:false, gallery: prev?prev.gallery!==false:true, setupDone: prev?!!prev.setupDone:false, archive: prev?(prev.archive||[]):[], familyPhoto:null
+    celebrated:false, voteCelebrated:false, gallery: prev?prev.gallery!==false:true, setupDone: prev?!!prev.setupDone:false, archive: prev?(prev.archive||[]):[], familyPhoto:null, hunts: prev?(prev.hunts||{}):{}, onboarded: prev?!!prev.onboarded:false, keepAwake: prev?prev.keepAwake:true, lastBackup: prev?prev.lastBackup:null, backupCount: prev?prev.backupCount:0, lastHunt: prev?prev.lastHunt:null
   };
 }
 /* ---------- stockage (mêmes clés que la version précédente) ---------- */
@@ -520,7 +530,8 @@ function podiumHTML(M){
 }
 let installEvt=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(view.name==='setup')render()});
 if(S.onboarded===undefined)S.onboarded=!!S.setupDone;
-let view=!S.onboarded?{name:'intro',step:0}:S.setupDone?{name:'home'}:{name:'setup'};
+const recent=S.lastActive&&Date.now()-S.lastActive<4*3600e3&&S.cats.some(c=>c.photos.length);
+let view=!S.onboarded?{name:'intro',step:0}:recent?{name:'home'}:{name:'welcome'};
 let sheet=null; let pending=null; let confirmKey=null; let popId=null;
 function go(v){if(canSpeak&&speakingKey){speechSynthesis.cancel();speakingKey=null}view=v;sheet=null;confirmKey=null;ready=null;busy=null;render();window.scrollTo(0,0)}
 function phase(){if(view.name==='setup')return 0;if(view.name==='vote'||view.name==='ballot')return 2;if(view.name==='final')return 3;return 1}
@@ -561,11 +572,37 @@ const INTRO=[
   ['📷','On photographie, on range',"Au musée, quelqu'un repère une œuvre ? Gros bouton photo, on choisit le cadre et qui l'a trouvée. Chaque cadre rempli donne une étoile."],
   ['🗳️','On vote, on garde',"À la fin, chacun vote en secret pour la photo qu'on garde dans chaque cadre. L'album va dans le carnet, et on peut en faire un PDF."],
   ['🧭','Bonus : le jeu de piste',"Pour le musée de Grenoble, des cartes font chercher les chefs-d'œuvre avec de petites missions. Le bouton 🔊 les lit aux enfants."]];
+function welcomeView(){
+  const nb=S.cats.reduce((a,c)=>a+c.photos.length,0),n=filled(),h=HUNTS[0],hn=Object.keys(hstate(h.id).found).length;
+  const going=S.setupDone;
+  return `<header><div class="eyebrow">Visiter un musée en famille</div><h1>Album du musée</h1></header>
+    ${going?`<section class="visitcard">
+        <div class="row" style="flex-wrap:nowrap;align-items:center">
+          ${S.familyPhoto?`<img data-pid="${S.familyPhoto.id}" alt="" class="vthumb">`:`<span class="vthumb glyph">🏛️</span>`}
+          <div class="grow"><div class="eyebrow">${nb?'Visite en cours':'Visite préparée'}</div><h2>${esc(S.title)}</h2>
+            <span class="vstars">${'★'.repeat(n)}<span>${'★'.repeat(Math.max(0,S.cats.length-n))}</span></span>
+            <small class="note">${nb?`${nb} photo${nb>1?'s':''} · ${n} cadre${n>1?'s':''} rempli${n>1?'s':''} sur ${S.cats.length}`:`${S.cats.length} cadres à remplir`}</small></div></div>
+        <button class="btn big coral" data-go="home">${nb?'Reprendre la visite':'Commencer la visite'}</button>
+        <div class="row"><button class="btn ghost small" data-go="setup">Modifier la préparation</button>
+          <button class="btn ghost small" data-newvisit>Nouvelle visite</button></div></section>`
+      :`<section class="visitcard"><h2>Première visite ?</h2><p class="note">On prépare l'album ensemble à la maison, en 2 minutes : le musée, qui vient, les cadres à remplir.</p>
+        <button class="btn big coral" data-go="setup">Préparer la visite</button></section>`}
+    <section class="how"><h3>Comment ça marche</h3>
+      <div class="howrow"><div><span>📝</span><strong>Préparer</strong><small>les cadres à remplir</small></div>
+        <div><span>📷</span><strong>Photographier</strong><small>une étoile par cadre</small></div>
+        <div><span>🗳️</span><strong>Voter</strong><small>et garder l'album</small></div></div>
+      <button class="btn ghost small" data-go="intro">📘 Le mode d'emploi en 4 écrans</button></section>
+    <div class="list">
+      <button class="item" data-hunt="${h.id}"><span class="glyph">🧭</span><span class="grow">Jeu de piste : ${esc(h.title)}<br><small class="note">${h.cards.length} chefs-d'œuvre à retrouver</small></span><span class="state ${hn?'ok':''}">${hn?'★'.repeat(hn):''}</span></button>
+      <button class="item" data-go="carnet"><span class="glyph">📖</span><span class="grow">Le carnet des visites<br><small class="note">${S.archive.length?`${S.archive.length} visite${S.archive.length>1?'s':''} gardée${S.archive.length>1?'s':''}`:'vos albums terminés'}</small></span></button>
+      <button class="item" data-go="setup"><span class="glyph">⚙️</span><span class="grow">Famille, cadres et réglages<br><small class="note">mise en commun, galerie, écran allumé</small></span></button>
+    </div>`;
+}
 function introView(){
   const k=view.step||0,[ic,t,p]=INTRO[k],last=k===INTRO.length-1;
   return `<section class="intro"><span class="hero-ico" aria-hidden="true">${ic}</span><h1>${t}</h1><p>${p}</p>
     <div class="dots">${INTRO.map((_,i)=>`<span class="${i===k?'on':''}"></span>`).join('')}</div>
-    <button class="btn big coral" data-introstep="${last?'done':k+1}">${last?(S.setupDone?'Retour à l’appli':'Préparer ma première visite'):'Suivant'}</button>
+    <button class="btn big coral" data-introstep="${last?'done':k+1}">${last?(S.setupDone?'Retour à l’accueil':'Préparer ma première visite'):'Suivant'}</button>
     ${last?'':`<button class="btn ghost small" data-introstep="done">Passer</button>`}</section>`;
 }
 function catView(){
@@ -735,7 +772,7 @@ function setupView(){
       <label class="check" for="gal"><input type="checkbox" id="gal" ${S.gallery?'checked':''}>Enregistrer aussi chaque photo dans la galerie du téléphone</label>
       <p class="note">${IOS?"Sur iPhone, une fenêtre s'ouvre après chaque photo : touchez « Enregistrer l'image ».":"Sur Android, les photos arrivent dans la galerie, dossier Téléchargements."}</p>
       ${installEvt?`<button class="btn" data-install>Installer sur l'écran d'accueil</button>`:`<p class="note"><strong>Pour l'avoir sans réseau au musée :</strong> ${IOS?"dans Safari, Partager puis « Sur l'écran d'accueil ».":"dans Chrome, menu ⋮ puis « Ajouter à l'écran d'accueil »."}</p>`}
-      <button class="btn ghost" data-reset>${confirmKey==='reset'?'Touchez encore pour confirmer':'Nouvelle visite (l’album actuel va dans le carnet)'}</button></section>`;
+      <button class="btn ghost" data-reset>Nouvelle visite…</button></section>`;
 }
 /* ---------- jeux de piste ---------- */
 /* Textes rédigés d'après les fiches du musée (museedegrenoble.fr) et de ses partenaires, vérifiées en octobre 2026.
@@ -873,6 +910,16 @@ function sheetHTML(){
         <button class="btn ghost" data-savephoto="${p.id}">Dans la galerie</button>
         <button class="btn ghost" data-delphoto="${p.id}">${confirmKey==='ph'+p.id?'Sûr ? Retirer':'Retirer'}</button></div></div></div>`;
   }
+  if(sheet.type==='newvisit'){
+    const nb=S.cats.reduce((a,c)=>a+c.photos.length,0);
+    return `<div class="sheet" data-backdrop><div><h2>Nouvelle visite</h2>
+      <p class="note">La famille et les cadres sont gardés. ${nb?`L'album actuel contient ${nb} photo${nb>1?'s':''}. Que faire de lui ?`:''}</p>
+      ${nb?`<button class="btn big coral" data-newv="keep">📖 Le ranger dans le carnet</button>
+        <button class="btn big ${confirmKey==='wipe'?'coral':'ghost'}" data-newv="wipe">${confirmKey==='wipe'?'Sûr ? Touchez encore pour tout effacer':'🗑️ L’effacer sans le garder'}</button>
+        <p class="note">Effacer : pratique pour des photos de test. Les photos déjà copiées dans la galerie du téléphone y restent.</p>`
+        :`<button class="btn big coral" data-newv="wipe2">Commencer une nouvelle visite</button>`}
+      <button class="btn ghost" data-close>Annuler</button></div></div>`;
+  }
   if(sheet.type==='huntwho'){
     const picks=S.family.map(m=>`<button class="pick" data-huntwho="${m.id}">${av(m,'lg')}${esc(m.name)}</button>`).join('');
     return `<div class="sheet"><div><div class="preview"><img src="${pending.url}" alt=""><h2>Qui l'a trouvée ?</h2></div>
@@ -927,9 +974,10 @@ function sheetHTML(){
   }
   return '';
 }
-const TABS=[['album','🖼️','Album',['home','cat','vote','final']],['hunt','🧭','Jeu de piste',['hunts','hunt','clue']],['shoot'],['carnet','📖','Carnet',['carnet','visit']],['setup','⚙️','Préparer',['setup']]];
+const TABS=[['welcome','🏠','Accueil',['welcome','setup']],['album','🖼️','Album',['home','cat','vote','final']],['shoot'],['hunt','🧭','Jeu',['hunts','hunt','clue']],['carnet','📖','Carnet',['carnet','visit']]];
 function barHTML(){
   if(view.name==='ballot'||view.name==='intro') return '';
+  if(view.name==='welcome'&&!S.setupDone) return '';
   const cam=view.name==='clue'?'huntcam':'cam';
   return `<nav class="tabs" aria-label="Navigation">${TABS.map(t=>{
     if(t[0]==='shoot') return `<label class="shootbtn" aria-label="Prendre une photo"><span aria-hidden="true">📷</span><input type="file" id="${cam}" accept="image/*" capture="environment"></label>`;
@@ -937,7 +985,7 @@ function barHTML(){
     return `<button class="tab ${on?'on':''}" data-tab="${t[0]}"><span aria-hidden="true">${t[1]}</span>${t[2]}</button>`}).join('')}</nav>`;
 }
 function render(){
-  const v={home:homeView,cat:catView,vote:voteView,ballot:ballotView,final:finalView,setup:setupView,carnet:carnetView,visit:visitView,intro:introView,hunts:huntsView,hunt:huntView,clue:clueView}[view.name]||homeView;
+  const v={home:homeView,cat:catView,vote:voteView,ballot:ballotView,final:finalView,setup:setupView,carnet:carnetView,visit:visitView,intro:introView,welcome:welcomeView,hunts:huntsView,hunt:huntView,clue:clueView}[view.name]||homeView;
   $('#app').innerHTML=v();
   const bar=barHTML();$('#bar').innerHTML=bar;$('#bar').hidden=!bar;document.body.classList.toggle('has-bar',!!bar);
   $('#sheet').innerHTML=sheetHTML();
@@ -963,8 +1011,8 @@ document.addEventListener('click',e=>{
   if(sh&&e.target===sh){sheet=null;confirmKey=null;return render()}
   const t=e.target.closest('button'); if(!t||t.disabled) return;
   const d=t.dataset;
-  if(d.introstep){if(d.introstep==='done'){S.onboarded=true;save();return go({name:S.setupDone?'home':'setup'})}view.step=+d.introstep;return render()}
-  if(d.tab){const t=d.tab;return go({name:t==='album'?'home':t==='hunt'?(view.name==='hunts'?'hunts':(S.lastHunt?'hunt':'hunts')):t,id:t==='hunt'?S.lastHunt:undefined})}
+  if(d.introstep){if(d.introstep==='done'){S.onboarded=true;save();return go({name:S.setupDone?'welcome':'setup'})}view.step=+d.introstep;return render()}
+  if(d.tab){const t=d.tab;if(t==='album'&&!S.setupDone)return go({name:'setup'});return go({name:t==='album'?'home':t==='hunt'?(view.name==='hunts'?'hunts':(S.lastHunt?'hunt':'hunts')):t,id:t==='hunt'?S.lastHunt:undefined})}
   if(d.go){if(d.go==='final'&&!S.voteCelebrated){S.voteCelebrated=true;save();setTimeout(confetti,200)} return go({name:d.go})}
   if(d.start!==undefined){S.family.forEach((m,i)=>{if(!m.name.trim())m.name='Invité '+(i+1)});S.cats.forEach(c=>{if(!c.name.trim())c.name='Cadre surprise'});S.setupDone=true;save();return go({name:'home'})}
   if(d.open) return go({name:'cat',id:d.open});
@@ -984,6 +1032,7 @@ document.addEventListener('click',e=>{
     const c=cat(sheet.cat),f=pending.file,wasFilled=c.photos.length>0,wasComplete=complete();
     if(S.gallery) toGallery([f],`${slug(S.title)}-${slug(c.name)}-${stamp()}`,true);
     endCapture();
+    S.lastActive=Date.now();
     if(view.name!=='cat'&&view.name!=='home')view={name:'home'};
     const id=uid();c.photos.push({id,by:d.who,ts:Date.now()});c.votes={};c.winner=null;S.voteCelebrated=false;save();
     compress(f).then(b=>{putBlob(id,b);render()});
@@ -993,6 +1042,13 @@ document.addEventListener('click',e=>{
     return render();
   }
   if(d.speak){speak(speechFor(d.speak),d.speak);return}
+  if(d.newvisit!==undefined||d.reset!==undefined){sheet={type:'newvisit'};confirmKey=null;return render()}
+  if(d.newv){
+    if(d.newv==='wipe'&&confirmKey!=='wipe'){confirmKey='wipe';return render()}
+    if(d.newv==='keep'){archiveCurrent();toast('Album rangé dans le carnet 📖')}
+    else{S.cats.forEach(c=>c.photos.forEach(p=>delBlob(p.id)));if(S.familyPhoto)delBlob(S.familyPhoto.id);if(d.newv==='wipe')toast('Album effacé')}
+    const keep=S;S=freshState(keep);S.setupDone=false;S.onboarded=true;S.lastActive=0;save();return go({name:'setup'});
+  }
   /* jeu de piste */
   if(d.hunt){S.lastHunt=d.hunt;save();return go({name:'hunt',id:d.hunt})}
   if(d.clue){return go({name:'clue',hunt:view.hunt||view.id,id:d.clue})}
@@ -1054,10 +1110,6 @@ document.addEventListener('click',e=>{
   if(d.delcat){const c=cat(d.delcat);
     if(c.photos.length&&confirmKey!=='cat'+c.id){confirmKey='cat'+c.id;return render()}
     c.photos.forEach(p=>delBlob(p.id));S.cats=S.cats.filter(x=>x.id!==c.id);confirmKey=null;save();return render()}
-  if(d.reset!==undefined){
-    if(confirmKey!=='reset'){confirmKey='reset';return render()}
-    archiveCurrent();const keep=S;S=freshState(keep);S.setupDone=false;save();return go({name:'setup'});
-  }
 });
 document.addEventListener('change',e=>{
   if(e.target.id==='gal'){S.gallery=e.target.checked;save();return}
