@@ -94,6 +94,13 @@ button:focus-visible,input:focus-visible,label:focus-visible{outline:3px solid v
 .shoot .lens{width:58px;height:58px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:1.9rem}
 .shoot input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
 
+.famcard{position:relative;display:block;border-radius:18px;overflow:hidden;background:var(--card);border:2px solid var(--line)}
+.famcard img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
+.famcard .famlabel{position:absolute;left:10px;bottom:10px;background:var(--card);border-radius:999px;padding:4px 12px;font-weight:800;font-size:.9rem}
+.famcard .famchange{position:absolute;right:10px;bottom:10px;cursor:pointer;overflow:hidden}
+.famcard.empty{border-style:dashed;padding:18px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer}
+.famcard.empty .glyph{font-size:2.4rem}
+.famcard input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
 /* catégorie */
 .cat-head{display:flex;gap:14px;align-items:center}
 .cat-head .glyph{font-size:3.4rem;line-height:1;width:76px;height:76px;border-radius:50%;background:var(--card);display:grid;place-items:center;flex:none;
@@ -189,7 +196,7 @@ function freshState(prev){
     title: prev?prev.title:'Musée de Grenoble',
     family: prev?prev.family:[['Papa','🦊'],['Maman','🐻'],['Enfant 1','🐰'],['Enfant 2','🐼']].map(([n,i],k)=>({id:uid(),name:n,icon:i,color:COLORS[k]})),
     cats: (prev?prev.cats.map(c=>[c.icon,c.name]):DEFAULT_CATS).map(([i,n])=>({id:uid(),icon:i,name:n,photos:[],votes:{},winner:null})),
-    celebrated:false, voteCelebrated:false, gallery: prev?prev.gallery!==false:true, setupDone: prev?!!prev.setupDone:false, archive: prev?(prev.archive||[]):[]
+    celebrated:false, voteCelebrated:false, gallery: prev?prev.gallery!==false:true, setupDone: prev?!!prev.setupDone:false, archive: prev?(prev.archive||[]):[], familyPhoto:null
   };
 }
 /* ---------- stockage (mêmes clés que la version précédente) ---------- */
@@ -282,7 +289,8 @@ async function exportAlbum(){
   for(const c of S.cats){const photos=[];
     for(const p of c.photos){const b=await getBlob(p.id);if(b){const data=await blobToB64(b);if(data)photos.push({id:p.id,by:p.by,ts:p.ts,data})}}
     cats.push({id:c.id,icon:c.icon,name:c.name,photos})}
-  const out={app:'album-musee',v:1,sent:Date.now(),title:S.title,family:S.family.map(m=>({id:m.id,name:m.name,icon:m.icon,color:m.color})),cats};
+  let fam=null;if(S.familyPhoto){const b=await getBlob(S.familyPhoto.id);if(b)fam={id:S.familyPhoto.id,ts:S.familyPhoto.ts,data:await blobToB64(b)}}
+  const out={app:'album-musee',v:1,sent:Date.now(),title:S.title,familyPhoto:fam,family:S.family.map(m=>({id:m.id,name:m.name,icon:m.icon,color:m.color})),cats};
   return new File([JSON.stringify(out)],`album-${slug(S.title)}-${stamp()}.txt`,{type:'text/plain'});
 }
 const norm=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
@@ -313,6 +321,7 @@ async function mergeAlbum(A){
       try{const b=await (await fetch(p.data)).blob();putBlob(p.id,b);l.photos.push({id:p.id,by:fam[p.by]||p.by,ts:p.ts||Date.now()});known.add(p.id);added++;changed=true}catch(e){}}
     if(changed){l.photos.sort((a,b)=>a.ts-b.ts);l.votes={};l.skipped={};l.winner=null}
   }
+  if(A.familyPhoto&&A.familyPhoto.data&&!S.familyPhoto){try{const b=await (await fetch(A.familyPhoto.data)).blob();putBlob(A.familyPhoto.id,b);S.familyPhoto={id:A.familyPhoto.id,ts:A.familyPhoto.ts};added++}catch(e){}}
   if(added)S.voteCelebrated=false;
   save();return added;
 }
@@ -329,17 +338,125 @@ const decided=c=>!c.photos.length||!!winnerOf(c);
 const coverOf=c=>winnerOf(c)||c.photos[c.photos.length-1];
 const nextUndecided=()=>S.cats.find(c=>!decided(c));
 function currentModel(){const all=S.cats.flatMap(c=>c.photos);
-  return {id:'',title:S.title,date:all.length?Math.min(...all.map(p=>p.ts)):Date.now(),family:S.family,stars:filled(),total:S.cats.length,
+  return {id:'',title:S.title,familyPhoto:S.familyPhoto||null,date:all.length?Math.min(...all.map(p=>p.ts)):Date.now(),family:S.family,stars:filled(),total:S.cats.length,
     cats:S.cats.map(c=>({icon:c.icon,name:c.name,photos:c.photos,photo:winnerOf(c)}))}}
-function visitModel(v){return {id:v.id,title:v.title,date:v.date,family:v.family,stars:v.stars,total:v.total,
+function visitModel(v){return {id:v.id,title:v.title,familyPhoto:v.familyPhoto||null,date:v.date,family:v.family,stars:v.stars,total:v.total,
     cats:v.cats.map(c=>({icon:c.icon,name:c.name,photos:c.photos,photo:c.photos.find(p=>p.id===c.winner)||c.photos[c.photos.length-1]||null}))}}
 function archiveCurrent(){
-  const all=S.cats.flatMap(c=>c.photos); if(!all.length) return false;
-  S.archive.unshift({id:uid(),title:S.title,date:Math.min(...all.map(p=>p.ts)),stars:filled(),total:S.cats.length,
+  const all=S.cats.flatMap(c=>c.photos); if(!all.length){if(S.familyPhoto)delBlob(S.familyPhoto.id);return false}
+  S.archive.unshift({id:uid(),title:S.title,familyPhoto:S.familyPhoto||null,date:Math.min(...all.map(p=>p.ts)),stars:filled(),total:S.cats.length,
     family:S.family.map(m=>({id:m.id,name:m.name,icon:m.icon,color:m.color})),
     cats:S.cats.filter(c=>c.photos.length).map(c=>({icon:c.icon,name:c.name,photos:c.photos.map(p=>({id:p.id,by:p.by,ts:p.ts})),winner:(winnerOf(c)||coverOf(c)).id}))});
   return true;
 }
+/* ---------- PDF : chaque page est dessinée sur un canvas puis insérée en JPEG ---------- */
+const PW=1240,PH=1754;
+function newPage(){const c=document.createElement('canvas');c.width=PW;c.height=PH;const x=c.getContext('2d');x.fillStyle='#E4ECEE';x.fillRect(0,0,PW,PH);return [c,x]}
+async function bitmap(id){const b=id&&await getBlob(id);if(!b)return null;try{return await createImageBitmap(b)}catch(e){return null}}
+function framed(x,im,bx,by,bw,bh){ // photo entière (sans recadrage) dans un cadre doré
+  const k=Math.min(bw/im.width,bh/im.height),w=im.width*k,h=im.height*k,X=bx+(bw-w)/2,Y=by+(bh-h)/2;
+  x.fillStyle='#E2B550';x.fillRect(X-26,Y-26,w+52,h+52);x.fillStyle='#B7821C';x.fillRect(X-16,Y-16,w+32,h+32);
+  x.fillStyle='#FFFFFF';x.fillRect(X-8,Y-8,w+16,h+16);x.drawImage(im,X,Y,w,h);return Y+h+26;
+}
+function cover(x,im,X,Y,w,h){const k=Math.max(w/im.width,h/im.height),dw=im.width*k,dh=im.height*k;
+  x.save();x.beginPath();x.rect(X,Y,w,h);x.clip();x.drawImage(im,X+(w-dw)/2,Y+(h-dh)/2,dw,dh);x.restore()}
+function wrap(x,text,X,Y,maxW,lh,maxLines){const words=String(text).split(' ');let line='',n=0;
+  for(const w of words){const t=line?line+' '+w:w;
+    if(x.measureText(t).width>maxW&&line){if(n===maxLines-1){line+='…';break}x.fillText(line,X,Y+n*lh);n++;line=w}else line=t}
+  if(line){x.fillText(line,X,Y+n*lh,maxW);n++}return Y+(n-1)*lh+lh}
+function footer(x,M,n,tot){x.fillStyle='#56666E';x.font='700 24px Nunito,sans-serif';x.textAlign='left';x.fillText(M.title,80,PH-60,PW-300);
+  x.textAlign='right';x.fillText(`${n} / ${tot}`,PW-80,PH-60);x.textAlign='left'}
+async function pdfPages(M){
+  try{await document.fonts.ready}catch(e){}
+  const cats=M.cats.filter(c=>c.photo),pages=[],tot=cats.length+2;
+  {const [c,x]=newPage();
+   x.fillStyle='#56666E';x.font='800 30px Nunito,sans-serif';x.fillText(fdate(M.date).toUpperCase(),100,150);
+   x.fillStyle='#1C2A31';x.font='800 96px "Baloo 2",sans-serif';let y=wrap(x,M.title,100,250,PW-200,100,2);
+   const fp=await bitmap(M.familyPhoto&&M.familyPhoto.id);
+   if(fp) y=framed(x,fp,130,y+20,PW-260,900);
+   else{x.fillStyle='#D3DFE2';x.fillRect(130,y+20,PW-260,700);x.font='200px sans-serif';x.textAlign='center';x.fillText('🖼️',PW/2,y+450);x.textAlign='left';y+=760}
+   y+=60;x.font='700 46px Nunito,sans-serif';x.fillStyle='#1C2A31';
+   x.fillText(M.family.map(m=>`${m.icon} ${m.name}`).join('   '),100,y,PW-200);
+   y+=90;x.fillStyle='#B7821C';x.font='700 64px sans-serif';x.fillText('★'.repeat(M.stars)+'☆'.repeat(Math.max(0,M.total-M.stars)),100,y,PW-200);
+   x.fillStyle='#56666E';x.font='700 32px Nunito,sans-serif';x.fillText(M.stars===M.total?'Album complet !':`${M.stars} cadres remplis sur ${M.total}`,100,y+60);
+   footer(x,M,1,tot);pages.push(c)}
+  for(let i=0;i<cats.length;i++){const ct=cats[i],[c,x]=newPage();
+    x.font='110px sans-serif';x.fillText(ct.icon,90,215);
+    x.fillStyle='#1C2A31';x.font='800 70px "Baloo 2",sans-serif';const y0=wrap(x,ct.name,250,175,PW-340,76,2);
+    const others=ct.photos.filter(p=>p.id!==ct.photo.id);
+    const boxH=others.length?880:1150;
+    const im=await bitmap(ct.photo.id);let y=Math.max(y0,260)+30;
+    if(im) y=framed(x,im,130,y+26,PW-260,boxH);
+    const m=M.family.find(f=>f.id===ct.photo.by);
+    x.fillStyle='#1C2A31';x.font='800 40px Nunito,sans-serif';x.fillText(`👑 La photo choisie${m?` · trouvée par ${m.icon} ${m.name}`:''}`,100,y+50,PW-200);
+    if(others.length){y+=120;x.fillStyle='#56666E';x.font='800 28px Nunito,sans-serif';x.fillText('LES AUTRES CANDIDATES',100,y);y+=24;
+      const n=Math.min(others.length,8),cols=4,g=24,w=(PW-200-g*(cols-1))/cols;
+      for(let k=0;k<n;k++){const p=others[k],X=100+(k%cols)*(w+g),Y=y+Math.floor(k/cols)*(w+g),b=await bitmap(p.id);
+        if(Y+w>PH-100)break;
+        x.fillStyle='#D3DFE2';x.fillRect(X,Y,w,w);if(b)cover(x,b,X,Y,w,w);
+        const mm=M.family.find(f=>f.id===p.by);if(mm){x.fillStyle=mm.color;x.beginPath();x.arc(X+40,Y+w-40,30,0,7);x.fill();x.font='34px sans-serif';x.textAlign='center';x.fillText(mm.icon,X+40,Y+w-28);x.textAlign='left'}}}
+    footer(x,M,i+2,tot);pages.push(c)}
+  {const [c,x]=newPage();x.fillStyle='#1C2A31';x.font='800 76px "Baloo 2",sans-serif';x.fillText('Qui a trouvé',100,200);x.fillText('les photos gagnantes',100,280);
+   const wins={};M.family.forEach(m=>wins[m.id]=[]);cats.forEach(ct=>{if(wins[ct.photo.by])wins[ct.photo.by].push(ct.icon)});
+   let y=400;for(const m of M.family.slice().sort((a,b)=>wins[b.id].length-wins[a.id].length)){
+     x.fillStyle='#FFFFFF';x.fillRect(100,y,PW-200,150);x.fillStyle=m.color;x.beginPath();x.arc(185,y+75,52,0,7);x.fill();
+     x.font='60px sans-serif';x.textAlign='center';x.fillText(m.icon,185,y+96);x.textAlign='left';
+     x.fillStyle='#1C2A31';x.font='800 48px Nunito,sans-serif';x.fillText(m.name,270,y+70,420);
+     x.font='44px sans-serif';x.fillText(wins[m.id].join(' ')||' ',270,y+125,PW-560);
+     x.fillStyle='#B7821C';x.font='700 50px sans-serif';x.textAlign='right';x.fillText('★'.repeat(wins[m.id].length),PW-130,y+92);x.textAlign='left';
+     y+=180;if(y>PH-250)break}
+   footer(x,M,tot,tot);pages.push(c)}
+  return pages;
+}
+async function makePDF(M){
+  const pages=await pdfPages(M),enc=new TextEncoder(),parts=[],offs=[];let len=0;
+  const push=p=>{const b=typeof p==='string'?enc.encode(p):p;parts.push(b);len+=b.length};
+  const W=595.28,H=841.89,n=pages.length,N=3+3*n;
+  push('%PDF-1.4\n');push(new Uint8Array([37,226,227,207,211,10]));
+  offs[1]=len;push('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+  offs[2]=len;push(`2 0 obj\n<< /Type /Pages /Kids [${pages.map((_,i)=>`${3+3*i} 0 R`).join(' ')}] /Count ${n} >>\nendobj\n`);
+  for(let i=0;i<n;i++){const P=3+3*i,C=P+1,I=P+2;
+    const jpg=new Uint8Array(await (await new Promise(r=>pages[i].toBlob(r,'image/jpeg',.85))).arrayBuffer());
+    const cs=`q ${W} 0 0 ${H} 0 0 cm /Im0 Do Q`;
+    offs[P]=len;push(`${P} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /XObject << /Im0 ${I} 0 R >> >> /Contents ${C} 0 R >>\nendobj\n`);
+    offs[C]=len;push(`${C} 0 obj\n<< /Length ${cs.length} >>\nstream\n${cs}\nendstream\nendobj\n`);
+    offs[I]=len;push(`${I} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${PW} /Height ${PH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpg.length} >>\nstream\n`);push(jpg);push('\nendstream\nendobj\n');
+  }
+  const x0=len;let xr=`xref\n0 ${N}\n0000000000 65535 f \n`;for(let k=1;k<N;k++)xr+=String(offs[k]).padStart(10,'0')+' 00000 n \n';
+  push(xr+`trailer\n<< /Size ${N} /Root 1 0 R >>\nstartxref\n${x0}\n%%EOF\n`);
+  return new Blob(parts,{type:'application/pdf'});
+}
+/* Les fichiers sont préparés d'abord, puis partagés au toucher suivant (sinon le téléphone bloque le partage) */
+let ready=null,busy=null;
+function modelFor(vid){const V=vid&&S.archive.find(x=>x.id===vid);return V?visitModel(V):currentModel()}
+async function buildFiles(kind,vid){const M=modelFor(vid),base=`${slug(M.title)}-${stamp()}`;
+  if(kind==='pdf') return [new File([await makePDF(M)],`album-${base}.pdf`,{type:'application/pdf'})];
+  if(kind==='img') return [new File([await albumImage(M)],`album-${base}.jpg`,{type:'image/jpeg'})];
+  const ids=[...(M.familyPhoto?[M.familyPhoto.id]:[]),...M.cats.flatMap(c=>c.photos.map(p=>p.id))];
+  const bs=(await Promise.all(ids.map(getBlob))).filter(Boolean);
+  return bs.map((b,i)=>new File([b],`${base}-${i+1}.jpg`,{type:'image/jpeg'}));
+}
+function shareFiles(files){
+  const fb=()=>{files.forEach((f,i)=>setTimeout(()=>download(f,f.name),i*350));toast(files.length>1?`${files.length} fichiers enregistrés dans Téléchargements`:'Enregistré dans Téléchargements')};
+  if(navigator.canShare&&navigator.canShare({files}))navigator.share({files}).catch(e=>{if(!e||e.name!=='AbortError')fb()});else fb();
+}
+function exportButtons(vid){
+  const one=(kind,label,cls)=>{const key=kind+':'+vid;
+    if(ready&&ready.key===key) return `<button class="btn ${cls} coral" data-sharenow>📤 ${kind==='pdf'?'Ouvrir / partager le PDF':kind==='img'?"Enregistrer l'image":'Enregistrer les photos'}</button>`;
+    if(busy===key) return `<button class="btn ${cls}" disabled>Préparation…</button>`;
+    return `<button class="btn ${cls}" data-make="${kind}" data-v="${vid}">${label}</button>`};
+  return `<div class="list">${one('pdf','📄 Créer le PDF de l’album','big')}${one('img',"🖼️ Album en une image",'ghost')}${one('all','Toutes les photos dans la galerie','ghost')}</div>`;
+}
+function famCard(M,editable){
+  const p=M.familyPhoto;
+  if(p) return `<section class="famcard"><img data-pid="${p.id}" alt="Photo de famille"><span class="famlabel">📸 Notre photo de famille</span>
+    ${editable?`<label class="btn ghost small famchange">Changer<input type="file" id="famcam" accept="image/*"></label>`:''}</section>`;
+  if(!editable) return '';
+  return `<label class="famcard empty"><span class="glyph">📸</span><strong>La photo de famille</strong>
+    <span class="note">Pour la couverture de l'album : tous ensemble devant le musée ou votre œuvre préférée.</span>
+    <input type="file" id="famcam" accept="image/*"></label>`;
+}
+
 const fdate=t=>new Date(t).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
 function framesHTML(M){
   return `<section class="wall">${M.cats.map(c=>{const p=c.photo,m=p&&M.family.find(x=>x.id===p.by);
@@ -355,7 +472,7 @@ function podiumHTML(M){
 let installEvt=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(view.name==='setup')render()});
 let view=S.setupDone?{name:'home'}:{name:'setup'};
 let sheet=null; let pending=null; let confirmKey=null; let popId=null;
-function go(v){view=v;sheet=null;confirmKey=null;render();window.scrollTo(0,0)}
+function go(v){view=v;sheet=null;confirmKey=null;ready=null;busy=null;render();window.scrollTo(0,0)}
 function phase(){if(view.name==='setup')return 0;if(view.name==='vote'||view.name==='ballot')return 2;if(view.name==='final')return 3;return 1}
 function stepsBar(){const p=phase(),n=['Préparer','Visiter','Voter','Album'];
   return `<nav class="steps" aria-label="Étapes">${n.map((t,i)=>`<span class="${i===p?'on':i<p?'done':''}">${t}</span>`).join('')}</nav>`}
@@ -384,6 +501,7 @@ function homeView(){
       <div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn ghost small" data-go="carnet">📖 Carnet</button><button class="btn ghost small" data-go="setup">Préparer</button></div></div>
     ${starsBlock()}
     <section class="wall">${frames}</section>
+    ${famCard(currentModel(),true)}
     <button class="btn big" data-go="vote" ${nb?'':'disabled'}>Fini ! On vote</button>
     <button class="btn ghost" data-sharesheet>📲 Mettre en commun avec l'autre téléphone</button>
     <p class="note">Repérez une œuvre, prenez-la en photo, rangez-la dans un cadre. Sans flash !</p>`;
@@ -469,15 +587,16 @@ function finalView(){
     <button class="back" data-go="vote">← Le vote</button>
     <div><div class="eyebrow">Album terminé</div><h1>${esc(S.title)}</h1></div>
     ${starsBlock()}
+    ${famCard(M,true)}
     ${framesHTML(M)}
     ${podiumHTML(M)}
-    <div class="list"><button class="btn big" data-exportalbum="">Enregistrer l'album en image</button>
-      <button class="btn ghost" data-exportall="">Enregistrer toutes les photos</button>
+    ${exportButtons('')}
+    <div class="list">
       <button class="btn big coral" data-tocarnet>${confirmKey==='carnet'?'Touchez encore pour ranger':'📖 Ranger dans le carnet'}</button></div>
     <p class="note">L'album rejoint le carnet des visites avec toutes ses photos, et une nouvelle visite commence avec la même famille et les mêmes cadres.</p>`;
 }
 function carnetView(){
-  const cards=S.archive.map(v=>{const M=visitModel(v),pics=M.cats.filter(c=>c.photo).slice(0,4);
+  const cards=S.archive.map(v=>{const M=visitModel(v),pics=[...(M.familyPhoto?[{photo:M.familyPhoto}]:[]),...M.cats.filter(c=>c.photo)].slice(0,4);
     return `<button class="item" data-visit="${v.id}" style="align-items:stretch">
       <span style="display:grid;grid-template-columns:1fr 1fr;gap:3px;width:86px;height:86px;flex:none;border-radius:8px;overflow:hidden;box-shadow:0 0 0 3px var(--gold-2)">
         ${pics.map(c=>`<img data-pid="${c.photo.id}" alt="" style="width:100%;height:100%;object-fit:cover;display:block">`).join('')}</span>
@@ -497,10 +616,11 @@ function visitView(){
     <div><div class="eyebrow">${fdate(v.date)}</div><h1>${esc(v.title)}</h1></div>
     <section class="stars"><div class="grow"><div class="starline">${'<span class="star on">★</span>'.repeat(v.stars)}${'<span class="star">★</span>'.repeat(Math.max(0,v.total-v.stars))}</div>
       <small>${v.stars===v.total?'Album complet':`${v.stars} cadres remplis sur ${v.total}`}</small></div><span class="bonus ${v.stars===v.total?'on':''}" aria-hidden="true">★</span></section>
+    ${famCard(M,false)}
     ${framesHTML(M)}
     ${podiumHTML(M)}
-    <div class="list"><button class="btn big" data-exportalbum="${v.id}">Enregistrer l'album en image</button>
-      <button class="btn ghost" data-exportall="${v.id}">Enregistrer toutes les photos</button>
+    ${exportButtons(v.id)}
+    <div class="list">
       <button class="btn ghost" data-delvisit="${v.id}">${confirmKey==='del'+v.id?'Touchez encore : supprimer définitivement':'Supprimer cette visite'}</button></div>`;
 }
 function setupView(){
@@ -651,7 +771,7 @@ document.addEventListener('click',e=>{
     archiveCurrent();const keep=S;S=freshState(keep);S.setupDone=true;save();toast('Album rangé dans le carnet 📖');return go({name:'carnet'})}
   if(d.delvisit){
     if(confirmKey!=='del'+d.delvisit){confirmKey='del'+d.delvisit;return render()}
-    const v=S.archive.find(x=>x.id===d.delvisit);if(v)v.cats.forEach(c=>c.photos.forEach(p=>delBlob(p.id)));
+    const v=S.archive.find(x=>x.id===d.delvisit);if(v){v.cats.forEach(c=>c.photos.forEach(p=>delBlob(p.id)));if(v.familyPhoto)delBlob(v.familyPhoto.id)}
     S.archive=S.archive.filter(x=>x.id!==d.delvisit);save();return go({name:'carnet'})}
   if(d.sharesheet!==undefined){sheet={type:'share'};prepareExport();return render()}
   if(d.export!==undefined){
@@ -671,14 +791,10 @@ document.addEventListener('click',e=>{
   if(d.skip){const c=cat(view.id);delete c.votes[d.skip];c.skipped=Object.assign(c.skipped||{},{[d.skip]:1});save();view.ready=null;return render()}
   if(d.pickwin){const c=cat(view.id);c.winner=d.pickwin;save();setTimeout(confetti,150);return render()}
   if(d.revote){const c=cat(d.revote);c.votes={};c.skipped={};c.winner=null;S.voteCelebrated=false;save();view.ready=null;return render()}
-  if(d.exportall!==undefined){const V=d.exportall&&S.archive.find(x=>x.id===d.exportall);
-    Promise.all((V?V.cats:S.cats).flatMap(c=>c.photos.map(p=>getBlob(p.id)))).then(bs=>{bs=bs.filter(Boolean);if(bs.length)toGallery(bs,`${slug(S.title)}-${stamp()}`)});return}
-  if(d.exportalbum!==undefined){t.disabled=true;t.textContent='Préparation…';
-    const V=d.exportalbum&&S.archive.find(x=>x.id===d.exportalbum);
-    albumImage(V?visitModel(V):currentModel()).then(b=>{t.disabled=false;t.textContent="Enregistrer l'album en image";if(!b)return;
-      const f=new File([b],`album-${slug(V?V.title:S.title)}-${stamp()}.jpg`,{type:'image/jpeg'});
-      if(navigator.canShare&&navigator.canShare({files:[f]})) navigator.share({files:[f]}).catch(()=>{}); else {download(f,f.name);toast("Album enregistré dans la galerie")}});
-    return}
+  if(d.make){const key=d.make+':'+d.v;busy=key;ready=null;render();
+    buildFiles(d.make,d.v).then(files=>{busy=null;ready=files.length?{key,files}:null;if(!files.length)toast('Aucune photo à enregistrer');render()})
+      .catch(()=>{busy=null;toast('La préparation a échoué, réessayez');render()});return}
+  if(d.sharenow!==undefined&&ready){shareFiles(ready.files);return}
   if(d.install!==undefined&&installEvt){installEvt.prompt();installEvt.userChoice.finally(()=>{installEvt=null;render()});return}
   /* préparation */
   if(d.pickfam){sheet={type:'icon',kind:'fam',id:d.pickfam};return render()}
@@ -700,6 +816,10 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('change',e=>{
   if(e.target.id==='gal'){S.gallery=e.target.checked;save();return}
+  if(e.target.id==='famcam'&&e.target.files[0]){const f=e.target.files[0];e.target.value='';
+    if(S.gallery) toGallery([f],`${slug(S.title)}-famille-${stamp()}`,true);
+    const old=S.familyPhoto,id=uid();S.familyPhoto={id,ts:Date.now()};save();
+    compress(f).then(b=>{putBlob(id,b);if(old)delBlob(old.id);ready=null;render();toast('Photo de famille ajoutée 📸')});return}
   if(e.target.id==='importfile'&&e.target.files[0]){const f=e.target.files[0];e.target.value='';
     f.text().then(txt=>{const A=readAlbum(txt);if(!A){toast("Ce fichier n'est pas un album du musée");return}sheet={type:'import',album:A};render()});return}
   if(e.target.id==='cam'&&e.target.files[0]){
