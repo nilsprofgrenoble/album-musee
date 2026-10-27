@@ -94,6 +94,9 @@ button:focus-visible,input:focus-visible,label:focus-visible{outline:3px solid v
 .shoot .lens{width:58px;height:58px;border-radius:50%;background:#fff;display:grid;place-items:center;font-size:1.9rem}
 .shoot input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
 
+.clueimg{display:block;width:100%;max-height:60vh;object-fit:contain;background:var(--wall-2);border-radius:6px;box-shadow:0 0 0 5px var(--gold),0 0 0 8px var(--gold-2);margin:8px 0}
+.zoomed{position:fixed;inset:0;z-index:25;background:#111;display:flex;align-items:center;justify-content:center;overflow:auto}
+.zoomed img{max-width:none;width:220%}
 .famcard{position:relative;display:block;border-radius:18px;overflow:hidden;background:var(--card);border:2px solid var(--line)}
 .famcard img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
 .famcard .famlabel{position:absolute;left:10px;bottom:10px;background:var(--card);border-radius:999px;padding:4px 12px;font-weight:800;font-size:.9rem}
@@ -522,6 +525,7 @@ function homeView(){
     ${starsBlock()}
     <section class="wall">${frames}</section>
     ${famCard(currentModel(),true)}
+    <button class="btn ghost" data-go="hunts">🧭 Jeu de piste des chefs-d'œuvre</button>
     <button class="btn big" data-go="vote" ${nb?'':'disabled'}>Fini ! On vote</button>
     <button class="btn ghost" data-sharesheet>📲 Mettre en commun avec l'autre téléphone</button>
     <p class="note">Repérez une œuvre, prenez-la en photo, rangez-la dans un cadre. Sans flash !</p>`;
@@ -689,6 +693,95 @@ function setupView(){
       ${installEvt?`<button class="btn" data-install>Installer sur l'écran d'accueil</button>`:`<p class="note"><strong>Pour l'avoir sans réseau au musée :</strong> ${IOS?"dans Safari, Partager puis « Sur l'écran d'accueil ».":"dans Chrome, menu ⋮ puis « Ajouter à l'écran d'accueil »."}</p>`}
       <button class="btn ghost" data-reset>${confirmKey==='reset'?'Touchez encore pour confirmer':'Nouvelle visite (l’album actuel va dans le carnet)'}</button></section>`;
 }
+/* ---------- jeux de piste ---------- */
+/* Textes rédigés d'après les fiches du musée (museedegrenoble.fr) et de ses partenaires, vérifiées en octobre 2026.
+   Images : seulement pour les œuvres du domaine public, chargées depuis le site du musée. */
+const HUNTS=[{id:'grenoble-2026',title:'Musée de Grenoble',subtitle:'Les chefs-d’œuvre du musée',
+  note:'Les salles 5 à 10 (XVIIe siècle) sont fermées jusqu’au 30 octobre 2026, et les Zurbarán sont prêtés : ils ne sont pas dans ce jeu.',
+  cards:[
+  {id:'rubens',icon:'🕊️',room:'Salle 2',title:'Le tableau géant',artist:'Rubens, 1606',img:'https://images.navigart.fr/1000/5C/98/5C98233.jpg',
+   intro:'Le plus grand tableau du parcours : presque 5 mètres de haut, plus de deux fois et demie la taille de papa ! Le bâtiment du musée a été construit à sa hauteur.',
+   missions:['Trouve le pape au milieu, avec sa grande cape','Cherche la colombe blanche près de lui','Trouve le soldat qui porte une armure','En haut, un petit tableau dans le grand : une maman avec son bébé, entourés de petits enfants avec des ailes'],
+   hint:'C’est au tout début de la visite. Lève la tête !'},
+  {id:'guardi',icon:'⛵',room:'Salle 14',title:'Le chef de Venise porté en l’air',artist:'Guardi, vers 1770',img:'https://images.navigart.fr/1000/5C/78/5C78363.jpg',
+   intro:'Une fête à Venise : le nouveau chef de la ville, le doge, est promené au-dessus de la foule sur une grande place.',
+   missions:['Trouve l’homme assis dans une petite chaise portée sur les épaules','Il lance des pièces d’or et d’argent à la foule : où va-t-il les jeter ?','Trouve les hommes avec de longs bâtons qui ouvrent le passage','Combien de personnes vois-tu ? (impossible à compter !)'],
+   hint:'Un tableau en largeur, plein de minuscules personnages, avec une grande église au fond.'},
+  {id:'fantin',icon:'🍒',room:'Salle 22',title:'Le tout petit tableau de fiançailles',artist:'Fantin-Latour, 1869',img:'https://images.navigart.fr/1000/5E/76/5E76419.JPG',
+   intro:'Un cadeau d’amoureux : le peintre l’a offert à la femme qu’il allait épouser. Il est tout petit, à peine plus grand qu’une feuille de papier.',
+   missions:['Trouve les cerises','Trouve le verre de vin rouge, de la même couleur que les cerises','Trouve le vase bleu et blanc','Trouve la fleur blanche (un camélia)'],
+   hint:'Cherche un petit tableau de fleurs et de fruits. Il faut s’approcher.'},
+  {id:'gauguin',icon:'👡',room:'Salle 23',title:'La jeune fille en bleu',artist:'Gauguin, 1888',img:'https://images.navigart.fr/1000/5C/77/5C77688.jpg',
+   intro:'Madeleine, la sœur d’un ami du peintre, pose en rêvant. Derrière ce tableau, Gauguin en a peint un autre : une rivière !',
+   missions:['Elle pose sa tête sur sa main : fais pareil !','Quelle est la couleur de son habit ?','Trouve les sabots de Bretagne','Trouve le petit dessin accroché en haut'],
+   hint:'Une jeune femme, beaucoup de bleu, la tête appuyée sur la main.'},
+  {id:'monet',icon:'🪷',room:'Salles du XIXe siècle',title:'L’étang du jardin de Monet',artist:'Monet, 1917',img:'https://images.navigart.fr/1000/5C/98/5C98371.jpg',
+   intro:'Monet a peint le coin d’un étang dans son propre jardin, à Giverny. Il avait plus de 75 ans.',
+   missions:['Approche-toi tout près : vois-tu des choses, ou seulement des taches de couleur ?','Maintenant recule de 5 grands pas : que vois-tu apparaître ?','Quelles couleurs vois-tu le plus ?'],
+   hint:'Un grand tableau d’eau et de plantes, peint avec plein de petites touches. Demande à un gardien si tu ne le trouves pas.'},
+  {id:'matisse',icon:'🍆',room:'Salle 27',title:'Les aubergines qui dansent',artist:'Matisse, 1911',img:null,
+   intro:'Un immense tableau, plus haut que papa et encore plus large ! Matisse l’a offert au musée en 1922.',
+   missions:['Trouve les 3 aubergines qui dansent sur la table','Trouve le miroir à gauche','En haut, deux fenêtres s’ouvrent sur un ciel rose','Suis les grandes fleurs violettes : elles s’échappent du tableau !'],
+   hint:'Très grand, plein de motifs de fleurs, beaucoup de bleu, de rose et de violet.'},
+  {id:'picasso',icon:'✉️',room:'Art moderne',title:'La dame géante qui lit une lettre',artist:'Picasso, 1920',img:null,
+   intro:'Le premier tableau de Picasso entré dans un musée français, en 1921. La dame paraît énorme, comme une statue.',
+   missions:['Elle lit une lettre, pas un livre !','Elle pose sa tête sur sa main… comme la jeune fille de Gauguin. Tu te souviens ?','Ce tableau est presque tout en gris et en rose'],
+   hint:'Une dame assise, très grosse et calme, en gris et rose.'},
+  {id:'chagall',icon:'🐐',room:'Salle 34',title:'La mariée et l’homme à tête de chèvre',artist:'Chagall, 1939',img:null,
+   intro:'Un tableau qui ressemble à un rêve. Chagall l’a offert lui-même au musée en 1951.',
+   missions:['Trouve la mariée dans sa robe','Trouve l’homme qui a une tête de chèvre','Invente l’histoire : que se disent-ils ?'],
+   hint:'Un rêve plein de couleurs, avec une mariée.'},
+  {id:'giacometti',icon:'🪤',room:'Salle 36',title:'La cage aux deux petits personnages',artist:'Giacometti, 1950',img:null,
+   intro:'Une sculpture, pas un tableau : une cage posée sur un très grand pied.',
+   missions:['Trouve les deux tout petits personnages dans la cage','L’un est un buste d’homme, l’autre une femme debout : se regardent-ils ?','Si tu peux, tourne autour : est-ce que la cage change quand tu bouges ?'],
+   hint:'Une sculpture haute et très fine, avec une cage en haut.'}
+]}];
+const huntOf=id=>HUNTS.find(h=>h.id===id);
+function hstate(id){S.hunts=S.hunts||{};return S.hunts[id]=S.hunts[id]||{found:{},ticks:{},hints:{}}}
+function preloadHunt(h){h.cards.forEach(c=>{if(c.img){const i=new Image();i.src=c.img}})}
+function huntsView(){
+  return `<button class="back" data-go="home">← Visite en cours</button>
+    <div><div class="eyebrow">Pour une visite en famille</div><h1>Jeux de piste</h1></div>
+    <p class="note">Chaque carte décrit une œuvre célèbre à retrouver dans le musée. Devant l'œuvre, on fait les petites missions, puis on la prend en photo pour gagner l'étoile.</p>
+    <div class="list">${HUNTS.map(h=>{const st=hstate(h.id),n=Object.keys(st.found).length;
+      return `<button class="item" data-hunt="${h.id}"><span class="glyph">🧭</span><span class="grow">${esc(h.title)}<br><small class="note">${esc(h.subtitle)} · ${h.cards.length} œuvres</small></span>
+        <span class="state ${n===h.cards.length?'ok':''}">${'★'.repeat(n)||'à commencer'}</span></button>`}).join('')}</div>`;
+}
+function huntView(){
+  const h=huntOf(view.id);if(!h)return huntsView();const st=hstate(h.id),n=Object.keys(st.found).length;
+  preloadHunt(h);
+  const cards=h.cards.map((c,i)=>{const f=st.found[c.id];
+    return `<button class="item" data-clue="${c.id}" style="align-items:center">
+      <span style="width:64px;height:64px;border-radius:10px;flex:none;overflow:hidden;background:var(--wall-2);display:grid;place-items:center;font-size:2rem;${f?'box-shadow:0 0 0 3px var(--gold-2)':''}">
+        ${f?`<img data-pid="${f.id}" alt="" style="width:100%;height:100%;object-fit:cover">`:esc(c.icon)}</span>
+      <span class="grow"><small class="note">${i+1}. ${esc(c.room)}</small><br>${esc(c.title)}</span>
+      <span class="state ${f?'ok':''}">${f?'★':'à trouver'}</span></button>`}).join('');
+  return `<button class="back" data-go="hunts">← Jeux de piste</button>
+    <div><div class="eyebrow">Jeu de piste</div><h1>${esc(h.title)}</h1></div>
+    <section class="stars"><div class="grow"><div class="starline">${h.cards.map((c,i)=>`<span class="star ${st.found[c.id]?'on':''}">★</span>`).join('')}</div>
+      <small>${n===h.cards.length?'Toutes les œuvres sont trouvées, bravo !':`${n} œuvre${n>1?'s':''} trouvée${n>1?'s':''} sur ${h.cards.length}`}</small></div>
+      <span class="bonus ${n===h.cards.length?'on':''}" aria-hidden="true">★</span></section>
+    <p class="note">${esc(h.note)} Les cartes sont dans l'ordre du parcours. Ouvrez cette page une fois avec du réseau avant la visite, pour que les images soient gardées sur le téléphone.</p>
+    <div class="list">${cards}</div>`;
+}
+function clueView(){
+  const h=huntOf(view.hunt),c=h&&h.cards.find(x=>x.id===view.id);if(!c)return huntView();
+  const st=hstate(h.id),f=st.found[c.id],ticks=st.ticks[c.id]||[],idx=h.cards.indexOf(c),nx=h.cards[idx+1];
+  const m=f&&member(f.by);
+  return `<button class="back" data-hunt="${h.id}">← Toutes les cartes</button>
+    <div class="cat-head"><span class="glyph" aria-hidden="true">${esc(c.icon)}</span><div><div class="eyebrow">${esc(c.room)} · ${esc(c.artist)}</div><h2>${esc(c.title)}</h2></div></div>
+    ${c.img?`<img class="clueimg" src="${c.img}" alt="${esc(c.title)}" data-zoom onerror="this.replaceWith(Object.assign(document.createElement('p'),{className:'note',textContent:'Image indisponible sans réseau.'}))">`
+      :`<div class="empty-state"><span class="glyph">🔍</span><strong>Pas d'image pour celle-ci</strong><span class="note">L'œuvre est encore protégée par le droit d'auteur : on la reconnaît grâce aux indices.</span></div>`}
+    <p style="margin:0">${esc(c.intro)}</p>
+    <section class="step"><h3>Les missions</h3>
+      <div class="list">${c.missions.map((t,i)=>`<label class="check"><input type="checkbox" data-tick="${i}" ${ticks.includes(i)?'checked':''}>${esc(t)}</label>`).join('')}</div></section>
+    ${st.hints[c.id]?`<p class="note"><strong>Indice :</strong> ${esc(c.hint)}</p>`:`<button class="btn ghost small" data-hint>💡 Un indice</button>`}
+    ${f?`<section class="famcard"><img data-pid="${f.id}" alt=""><span class="famlabel">★ Trouvée${m?` par ${esc(m.icon)} ${esc(m.name)}`:''}</span></section>`:''}
+    <label class="btn big ${f?'ghost':'coral'}" style="position:relative;overflow:hidden">📷 ${f?'Reprendre la photo':'Trouvé ! Je la prends en photo'}
+      <input type="file" id="huntcam" accept="image/*" capture="environment" style="position:absolute;inset:0;opacity:0;width:100%"></label>
+    ${nx?`<button class="btn ghost" data-clue="${nx.id}">Carte suivante : ${esc(nx.icon)} ${esc(nx.title)}</button>`:''}`;
+}
+
 /* ---------- feuilles ---------- */
 function sheetHTML(){
   if(!sheet) return '';
@@ -701,6 +794,11 @@ function sheetHTML(){
       <div class="row"><button class="btn" data-close>Fermer</button>
         <button class="btn ghost" data-savephoto="${p.id}">Dans la galerie</button>
         <button class="btn ghost" data-delphoto="${p.id}">${confirmKey==='ph'+p.id?'Sûr ? Retirer':'Retirer'}</button></div></div></div>`;
+  }
+  if(sheet.type==='huntwho'){
+    const picks=S.family.map(m=>`<button class="pick" data-huntwho="${m.id}">${av(m,'lg')}${esc(m.name)}</button>`).join('');
+    return `<div class="sheet"><div><div class="preview"><img src="${pending.url}" alt=""><h2>Qui l'a trouvée ?</h2></div>
+      <div class="row" style="justify-content:center">${picks}</div><button class="btn ghost small" data-cancelcap>Annuler</button></div></div>`;
   }
   if(sheet.type==='capture'){
     const prev=`<div class="preview"><img src="${pending.url}" alt="">${sheet.cat?`<div><div class="eyebrow">Rangée dans</div><strong>${esc(cat(sheet.cat).icon)} ${esc(cat(sheet.cat).name)}</strong></div>`:'<h2>Dans quel cadre ?</h2>'}</div>`;
@@ -757,7 +855,7 @@ function barHTML(){
     <input type="file" id="cam" accept="image/*" capture="environment" aria-label="Prendre une photo"></label>`;
 }
 function render(){
-  const v={home:homeView,cat:catView,vote:voteView,ballot:ballotView,final:finalView,setup:setupView,carnet:carnetView,visit:visitView}[view.name]||homeView;
+  const v={home:homeView,cat:catView,vote:voteView,ballot:ballotView,final:finalView,setup:setupView,carnet:carnetView,visit:visitView,hunts:huntsView,hunt:huntView,clue:clueView}[view.name]||homeView;
   $('#app').innerHTML=v();
   const bar=barHTML();$('#bar').innerHTML=bar;$('#bar').hidden=!bar;document.body.classList.toggle('has-bar',!!bar);
   $('#sheet').innerHTML=sheetHTML();
@@ -777,6 +875,8 @@ function confetti(){
 function endCapture(){if(pending&&pending.url)URL.revokeObjectURL(pending.url);pending=null;sheet=null}
 /* ---------- événements ---------- */
 document.addEventListener('click',e=>{
+  const zi=e.target.closest('[data-zoom]');
+  if(zi){const z=document.createElement('div');z.className='zoomed';z.innerHTML=`<img src="${zi.src}" alt="">`;z.onclick=()=>z.remove();document.body.appendChild(z);return}
   const sh=e.target.closest('[data-backdrop]');
   if(sh&&e.target===sh){sheet=null;confirmKey=null;return render()}
   const t=e.target.closest('button'); if(!t||t.disabled) return;
@@ -805,6 +905,20 @@ document.addEventListener('click',e=>{
     if(!wasFilled) popId=c.id;
     toast(wasFilled?`Rangée dans ${c.icon}`:`Nouvelle étoile ! ${c.icon}`);
     if(!wasComplete&&complete()&&!S.celebrated){S.celebrated=true;save();setTimeout(confetti,300)}
+    return render();
+  }
+  /* jeu de piste */
+  if(d.hunt){return go({name:'hunt',id:d.hunt})}
+  if(d.clue){return go({name:'clue',hunt:view.hunt||view.id,id:d.clue})}
+  if(d.hint!==undefined){hstate(view.hunt).hints[view.id]=1;save();return render()}
+  if(d.huntwho){
+    const h=huntOf(view.hunt),c=h.cards.find(x=>x.id===view.id),st=hstate(h.id),f=pending.file,old=st.found[c.id];
+    if(S.gallery) toGallery([f],`jeu-${slug(h.title)}-${slug(c.title)}-${stamp()}`,true);
+    endCapture();const id=uid();st.found[c.id]={id,by:d.huntwho,ts:Date.now()};save();
+    compress(f).then(b=>{putBlob(id,b);if(old)delBlob(old.id);render()});
+    const n=Object.keys(st.found).length;
+    toast(old?'Photo remplacée':`Nouvelle étoile ! ${c.icon}`);
+    if(!old&&n===h.cards.length)setTimeout(confetti,300);
     return render();
   }
   /* vote */
@@ -861,6 +975,10 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('change',e=>{
   if(e.target.id==='gal'){S.gallery=e.target.checked;save();return}
+  if(e.target.dataset&&e.target.dataset.tick!==undefined&&view.name==='clue'){const st=hstate(view.hunt),i=+e.target.dataset.tick,a=st.ticks[view.id]=st.ticks[view.id]||[];
+    if(e.target.checked){if(!a.includes(i))a.push(i)}else st.ticks[view.id]=a.filter(x=>x!==i);save();return}
+  if(e.target.id==='huntcam'&&e.target.files[0]){const f=e.target.files[0];e.target.value='';
+    pending={file:f,url:URL.createObjectURL(f)};sheet={type:'huntwho'};render();return}
   if(e.target.id==='famcam'&&e.target.files[0]){const f=e.target.files[0];e.target.value='';
     if(S.gallery) toGallery([f],`${slug(S.title)}-famille-${stamp()}`,true);
     const old=S.familyPhoto,id=uid();S.familyPhoto={id,ts:Date.now()};save();

@@ -1,5 +1,5 @@
 // Album du musée : fonctionne sans réseau une fois ouvert une première fois.
-const VERSION = 'album-v9';
+const VERSION = 'album-v10';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -27,7 +27,7 @@ self.addEventListener('fetch', e => {
     return;
   }
   // Fichiers de l'appli et polices Google : cache d'abord.
-  if (url.origin === location.origin || url.host.endsWith('fonts.googleapis.com') || url.host.endsWith('fonts.gstatic.com')) {
+  if (url.origin === location.origin || url.host.endsWith('fonts.googleapis.com') || url.host === 'images.navigart.fr' || url.host.endsWith('fonts.gstatic.com')) {
     e.respondWith(caches.match(req).then(hit => hit || fetch(req).then(r => {
       if (r.ok || r.type === 'opaque') { const c = r.clone(); caches.open(VERSION).then(k => k.put(req, c)); }
       return r;
