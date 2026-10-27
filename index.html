@@ -432,9 +432,29 @@ function modelFor(vid){const V=vid&&S.archive.find(x=>x.id===vid);return V?visit
 async function buildFiles(kind,vid){const M=modelFor(vid),base=`${slug(M.title)}-${stamp()}`;
   if(kind==='pdf') return [new File([await makePDF(M)],`album-${base}.pdf`,{type:'application/pdf'})];
   if(kind==='img') return [new File([await albumImage(M)],`album-${base}.jpg`,{type:'image/jpeg'})];
+  if(kind==='backup') return [await makeBackup()];
   const ids=[...(M.familyPhoto?[M.familyPhoto.id]:[]),...M.cats.flatMap(c=>c.photos.map(p=>p.id))];
   const bs=(await Promise.all(ids.map(getBlob))).filter(Boolean);
   return bs.map((b,i)=>new File([b],`${base}-${i+1}.jpg`,{type:'image/jpeg'}));
+}
+async function photoData(p){const b=await getBlob(p.id);return b?{id:p.id,by:p.by,ts:p.ts,data:await blobToB64(b)}:null}
+async function makeBackup(){
+  const parts=['{"app":"album-musee-backup","v":1,"saved":'+Date.now()+',"archive":['];
+  for(let i=0;i<S.archive.length;i++){const v=S.archive[i];
+    const cats=[];for(const c of v.cats){const ph=[];for(const p of c.photos){const d=await photoData(p);if(d)ph.push(d)}cats.push({icon:c.icon,name:c.name,winner:c.winner,photos:ph})}
+    const fp=v.familyPhoto?await photoData(v.familyPhoto):null;
+    parts.push((i?',':'')+JSON.stringify({id:v.id,title:v.title,date:v.date,stars:v.stars,total:v.total,family:v.family,familyPhoto:fp,cats}))}
+  parts.push(']}');
+  S.lastBackup=Date.now();S.backupCount=S.archive.length;save();
+  return new File(parts,`sauvegarde-carnet-musee-${stamp()}.txt`,{type:'text/plain'});
+}
+function readBackup(text){try{const B=JSON.parse(text);if(B&&B.app==='album-musee-backup'&&Array.isArray(B.archive))return B}catch(e){}return null}
+async function restoreBackup(B){let visits=0,photos=0;const have=new Set(S.archive.map(v=>v.id));
+  for(const v of B.archive){if(have.has(v.id))continue;
+    const put=async p=>{if(!p||!p.data)return null;try{putBlob(p.id,await (await fetch(p.data)).blob());photos++;return {id:p.id,by:p.by,ts:p.ts}}catch(e){return null}};
+    const cats=[];for(const c of v.cats){const ph=[];for(const p of c.photos){const q=await put(p);if(q)ph.push(q)}cats.push({icon:c.icon,name:c.name,winner:c.winner,photos:ph})}
+    S.archive.push({id:v.id,title:v.title,date:v.date,stars:v.stars,total:v.total,family:v.family,familyPhoto:await put(v.familyPhoto),cats});visits++}
+  S.archive.sort((a,b)=>b.date-a.date);save();return {visits,photos};
 }
 function shareFiles(files){
   const fb=()=>{files.forEach((f,i)=>setTimeout(()=>download(f,f.name),i*350));toast(files.length>1?`${files.length} fichiers enregistrés dans Téléchargements`:'Enregistré dans Téléchargements')};
@@ -442,7 +462,7 @@ function shareFiles(files){
 }
 function exportButtons(vid){
   const one=(kind,label,cls)=>{const key=kind+':'+vid;
-    if(ready&&ready.key===key) return `<button class="btn ${cls} coral" data-sharenow>📤 ${kind==='pdf'?'Ouvrir / partager le PDF':kind==='img'?"Enregistrer l'image":'Enregistrer les photos'}</button>`;
+    if(ready&&ready.key===key) return `<button class="btn ${cls} coral" data-sharenow>📤 ${kind==='pdf'?'Ouvrir / partager le PDF':kind==='img'?"Enregistrer l'image":kind==='backup'?'Envoyer la sauvegarde':'Enregistrer les photos'}</button>`;
     if(busy===key) return `<button class="btn ${cls}" disabled>Préparation…</button>`;
     return `<button class="btn ${cls}" data-make="${kind}" data-v="${vid}">${label}</button>`};
   return `<div class="list">${one('pdf','📄 Créer le PDF de l’album','big')}${one('img',"🖼️ Album en une image",'ghost')}${one('all','Toutes les photos dans la galerie','ghost')}</div>`;
@@ -607,7 +627,24 @@ function carnetView(){
   return `<button class="back" data-go="home">← Visite en cours</button>
     <div><div class="eyebrow">Nos musées</div><h1>Le carnet des visites</h1></div>
     ${S.archive.length?`<div class="list">${cards}</div>`:
-      `<div class="empty-state"><span class="glyph">📖</span><strong>Le carnet est encore vide</strong><span class="note">À la fin d'une visite, après le vote, touchez « Ranger dans le carnet ».</span></div>`}`;
+      `<div class="empty-state"><span class="glyph">📖</span><strong>Le carnet est encore vide</strong><span class="note">À la fin d'une visite, après le vote, touchez « Ranger dans le carnet ».</span></div>`}
+    ${backupBlock()}`;
+}
+function backupBlock(){
+  const n=S.archive.length,since=n-(S.backupCount||0),key='backup:';
+  const status=!S.lastBackup?(n?`<strong style="color:var(--coral)">Jamais sauvegardé.</strong>`:'Aucune sauvegarde pour l’instant.')
+    :since>0?`<strong style="color:var(--coral)">${since} visite${since>1?'s':''} pas encore sauvegardée${since>1?'s':''}.</strong> Dernière sauvegarde : ${fdate(S.lastBackup)}.`
+    :`<span style="color:var(--ok);font-weight:800">✓ À jour</span> · dernière sauvegarde : ${fdate(S.lastBackup)}.`;
+  const btn=ready&&ready.key===key?`<button class="btn big coral" data-sharenow>📤 Envoyer la sauvegarde</button>`
+    :busy===key?`<button class="btn big" disabled>Préparation…</button>`
+    :`<button class="btn big ${n?'':'ghost'}" data-make="backup" data-v="" ${n?'':'disabled'}>💾 Sauvegarder tout le carnet</button>`;
+  return `<section class="step"><h3>Sauvegarde</h3>
+    <p class="note">Le carnet n'existe que sur ce téléphone. La sauvegarde est un fichier avec toutes les visites et leurs photos : rangez-le dans Google Drive ou envoyez-le-vous par mail.</p>
+    <p class="note">${status}</p>
+    ${btn}
+    <label class="btn ghost small" style="position:relative;overflow:hidden">Restaurer une sauvegarde
+      <input type="file" id="restorefile" accept=".txt,text/plain,application/json" style="position:absolute;inset:0;opacity:0;width:100%"></label>
+    <span class="note">La restauration ajoute les visites manquantes, sans rien effacer. Pratique sur un nouveau téléphone.</span></section>`;
 }
 function visitView(){
   const v=S.archive.find(x=>x.id===view.id); if(!v) return carnetView();
@@ -690,6 +727,12 @@ function sheetHTML(){
         <span class="note">${IOS?"Choisissez le fichier reçu (AirDrop le range dans Téléchargements ; dans WhatsApp, enregistrez-le d'abord dans Fichiers).":"Avec Quick Share : touchez ce bouton et choisissez le fichier dans Téléchargements. Avec WhatsApp : ne touchez pas le fichier, faites un appui long dessus, puis l'icône Partager (la flèche) et choisissez Album musée (l'appli doit être installée sur l'écran d'accueil)."}</span></div>
       <button class="btn ghost" data-close>Fermer</button></div></div>`;
   }
+  if(sheet.type==='restore'){const B=sheet.backup,have=new Set(S.archive.map(v=>v.id)),fresh=B.archive.filter(v=>!have.has(v.id));
+    return `<div class="sheet"><div><h2>Sauvegarde du ${fdate(B.saved)}</h2>
+      <p style="margin:0">${B.archive.length} visite${B.archive.length>1?'s':''} dans ce fichier${fresh.length?`, dont <strong>${fresh.length} absente${fresh.length>1?'s':''}</strong> de ce téléphone`:''}.</p>
+      ${fresh.length?`<div class="list">${fresh.slice(0,6).map(v=>`<div class="item"><span class="grow">${esc(v.title)}</span><span class="state">${fdate(v.date)}</span></div>`).join('')}</div>`:'<p class="note">Ce téléphone a déjà toutes ces visites.</p>'}
+      <button class="btn big coral" data-dorestore ${fresh.length?'':'disabled'}>Ajouter au carnet</button>
+      <button class="btn ghost" data-close>Annuler</button></div></div>`}
   if(sheet.type==='import'){
     const A=sheet.album,sm=albumSummary(A);
     return `<div class="sheet"><div><h2>Album reçu</h2>
@@ -768,7 +811,7 @@ document.addEventListener('click',e=>{
   if(d.visit) return go({name:'visit',id:d.visit});
   if(d.tocarnet!==undefined){
     if(confirmKey!=='carnet'){confirmKey='carnet';return render()}
-    archiveCurrent();const keep=S;S=freshState(keep);S.setupDone=true;save();toast('Album rangé dans le carnet 📖');return go({name:'carnet'})}
+    archiveCurrent();const keep=S;S=freshState(keep);S.setupDone=true;save();toast('Album rangé dans le carnet 📖 Pensez à le sauvegarder');return go({name:'carnet'})}
   if(d.delvisit){
     if(confirmKey!=='del'+d.delvisit){confirmKey='del'+d.delvisit;return render()}
     const v=S.archive.find(x=>x.id===d.delvisit);if(v){v.cats.forEach(c=>c.photos.forEach(p=>delBlob(p.id)));if(v.familyPhoto)delBlob(v.familyPhoto.id)}
@@ -794,7 +837,9 @@ document.addEventListener('click',e=>{
   if(d.make){const key=d.make+':'+d.v;busy=key;ready=null;render();
     buildFiles(d.make,d.v).then(files=>{busy=null;ready=files.length?{key,files}:null;if(!files.length)toast('Aucune photo à enregistrer');render()})
       .catch(()=>{busy=null;toast('La préparation a échoué, réessayez');render()});return}
-  if(d.sharenow!==undefined&&ready){shareFiles(ready.files);return}
+  if(d.sharenow!==undefined&&ready){shareFiles(ready.files);if(ready.key==='backup:'){toast('Choisissez Drive ou votre mail pour la garder en lieu sûr')}return}
+  if(d.dorestore!==undefined){t.disabled=true;t.textContent='Restauration…';
+    restoreBackup(sheet.backup).then(r=>{sheet=null;toast(`${r.visits} visite${r.visits>1?'s':''} ajoutée${r.visits>1?'s':''} au carnet`);go({name:'carnet'})});return}
   if(d.install!==undefined&&installEvt){installEvt.prompt();installEvt.userChoice.finally(()=>{installEvt=null;render()});return}
   /* préparation */
   if(d.pickfam){sheet={type:'icon',kind:'fam',id:d.pickfam};return render()}
@@ -820,6 +865,9 @@ document.addEventListener('change',e=>{
     if(S.gallery) toGallery([f],`${slug(S.title)}-famille-${stamp()}`,true);
     const old=S.familyPhoto,id=uid();S.familyPhoto={id,ts:Date.now()};save();
     compress(f).then(b=>{putBlob(id,b);if(old)delBlob(old.id);ready=null;render();toast('Photo de famille ajoutée 📸')});return}
+  if(e.target.id==='restorefile'&&e.target.files[0]){const f=e.target.files[0];e.target.value='';toast('Lecture de la sauvegarde…');
+    f.text().then(txt=>{const B=readBackup(txt);if(!B){toast(readAlbum(txt)?"C'est un album à mettre en commun, pas une sauvegarde : utilisez « Recevoir un album »":"Ce fichier n'est pas une sauvegarde du carnet");return}
+      sheet={type:'restore',backup:B};render()});return}
   if(e.target.id==='importfile'&&e.target.files[0]){const f=e.target.files[0];e.target.value='';
     f.text().then(txt=>{const A=readAlbum(txt);if(!A){toast("Ce fichier n'est pas un album du musée");return}sheet={type:'import',album:A};render()});return}
   if(e.target.id==='cam'&&e.target.files[0]){
