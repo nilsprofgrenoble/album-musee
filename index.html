@@ -97,6 +97,7 @@ button:focus-visible,input:focus-visible,label:focus-visible{outline:3px solid v
 .clueimg{display:block;width:100%;max-height:60vh;object-fit:contain;background:var(--wall-2);border-radius:6px;box-shadow:0 0 0 5px var(--gold),0 0 0 8px var(--gold-2);margin:8px 0}
 .zoomed{position:fixed;inset:0;z-index:25;background:#111;display:flex;align-items:center;justify-content:center;overflow:auto}
 .zoomed img{max-width:none;width:220%}
+.speak{align-self:flex-start}
 .famcard{position:relative;display:block;border-radius:18px;overflow:hidden;background:var(--card);border:2px solid var(--line)}
 .famcard img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}
 .famcard .famlabel{position:absolute;left:10px;bottom:10px;background:var(--card);border-radius:999px;padding:4px 12px;font-weight:800;font-size:.9rem}
@@ -495,7 +496,7 @@ function podiumHTML(M){
 let installEvt=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(view.name==='setup')render()});
 let view=S.setupDone?{name:'home'}:{name:'setup'};
 let sheet=null; let pending=null; let confirmKey=null; let popId=null;
-function go(v){view=v;sheet=null;confirmKey=null;ready=null;busy=null;render();window.scrollTo(0,0)}
+function go(v){if(canSpeak&&speakingKey){speechSynthesis.cancel();speakingKey=null}view=v;sheet=null;confirmKey=null;ready=null;busy=null;render();window.scrollTo(0,0)}
 function phase(){if(view.name==='setup')return 0;if(view.name==='vote'||view.name==='ballot')return 2;if(view.name==='final')return 3;return 1}
 function stepsBar(){const p=phase(),n=['Préparer','Visiter','Voter','Album'];
   return `<nav class="steps" aria-label="Étapes">${n.map((t,i)=>`<span class="${i===p?'on':i<p?'done':''}">${t}</span>`).join('')}</nav>`}
@@ -536,6 +537,7 @@ function catView(){
      <img data-pid="${p.id}" alt=""><span class="who">${av(member(p.by))}</span></button>`).join('');
   return `<button class="back" data-go="home">← Tous les cadres</button>
     <div class="cat-head"><span class="glyph" aria-hidden="true">${esc(c.icon)}</span><h2>${esc(c.name)}</h2></div>
+    ${speakBtn('cat:'+c.id)}
     ${c.photos.length?`<div class="eyebrow">${c.photos.length} photo${c.photos.length>1?'s':''} candidate${c.photos.length>1?'s':''}</div><div class="thumbs">${thumbs}</div>`
       :`<div class="empty-state"><span class="glyph">🔍</span><strong>Ce cadre attend sa première photo</strong><span class="note">Cherchez une œuvre qui va ici, puis touchez Photo.</span></div>`}`;
 }
@@ -575,6 +577,7 @@ function ballotView(){
         <div class="turn">${av(voter,'xl')}<div class="eyebrow">Vote ${n+1} sur ${S.family.length}</div>
           <h2>${n?'Passe le téléphone à':'C\'est au tour de'} ${esc(voter.name)}</h2>
           <button class="btn big coral" data-ready="${voter.id}">C'est moi, je vote !</button>
+          ${speakBtn('turn:'+voter.id+':'+c.id)}
           ${n?'':`<span class="note">Les votes restent secrets jusqu'à la fin.</span>`}</div>`;
     }
     const cards=c.photos.map(p=>`<button class="vote-card" data-ballot="${p.id}" aria-label="Choisir cette photo"><img data-pid="${p.id}" alt=""></button>`).join('');
@@ -688,6 +691,8 @@ function setupView(){
       <button class="btn ghost small" data-sharesheet>📲 Envoyer ou recevoir un album</button></section>
     <button class="btn big coral" data-start>${S.setupDone?'Retour à la visite':"C'est parti !"}</button>
     <section class="step"><h3>Réglages</h3>
+      <label class="check" for="awake"><input type="checkbox" id="awake" ${S.keepAwake!==false?'checked':''}>Garder l'écran allumé pendant la visite</label>
+      <p class="note">Plus besoin de déverrouiller le téléphone à chaque œuvre. Ça consomme un peu plus de batterie : partez chargés.</p>
       <label class="check" for="gal"><input type="checkbox" id="gal" ${S.gallery?'checked':''}>Enregistrer aussi chaque photo dans la galerie du téléphone</label>
       <p class="note">${IOS?"Sur iPhone, une fenêtre s'ouvre après chaque photo : touchez « Enregistrer l'image ».":"Sur Android, les photos arrivent dans la galerie, dossier Téléchargements."}</p>
       ${installEvt?`<button class="btn" data-install>Installer sur l'écran d'accueil</button>`:`<p class="note"><strong>Pour l'avoir sans réseau au musée :</strong> ${IOS?"dans Safari, Partager puis « Sur l'écran d'accueil ».":"dans Chrome, menu ⋮ puis « Ajouter à l'écran d'accueil »."}</p>`}
@@ -773,6 +778,7 @@ function clueView(){
     ${c.img?`<img class="clueimg" src="${c.img}" alt="${esc(c.title)}" data-zoom onerror="this.replaceWith(Object.assign(document.createElement('p'),{className:'note',textContent:'Image indisponible sans réseau.'}))">`
       :`<div class="empty-state"><span class="glyph">🔍</span><strong>Pas d'image pour celle-ci</strong><span class="note">L'œuvre est encore protégée par le droit d'auteur : on la reconnaît grâce aux indices.</span></div>`}
     <p style="margin:0">${esc(c.intro)}</p>
+    ${speakBtn('clue:'+h.id+':'+c.id)}
     <section class="step"><h3>Les missions</h3>
       <div class="list">${c.missions.map((t,i)=>`<label class="check"><input type="checkbox" data-tick="${i}" ${ticks.includes(i)?'checked':''}>${esc(t)}</label>`).join('')}</div></section>
     ${st.hints[c.id]?`<p class="note"><strong>Indice :</strong> ${esc(c.hint)}</p>`:`<button class="btn ghost small" data-hint>💡 Un indice</button>`}
@@ -782,6 +788,39 @@ function clueView(){
     ${nx?`<button class="btn ghost" data-clue="${nx.id}">Carte suivante : ${esc(nx.icon)} ${esc(nx.title)}</button>`:''}`;
 }
 
+/* ---------- lecture à voix haute ---------- */
+const canSpeak='speechSynthesis' in window;let speakingKey=null;
+function frVoice(){try{const v=speechSynthesis.getVoices();return v.find(x=>/^fr(-|_)FR/i.test(x.lang))||v.find(x=>/^fr/i.test(x.lang))||null}catch(e){return null}}
+function speak(text,key){
+  if(!canSpeak){toast("La lecture à voix haute n'est pas disponible sur ce téléphone");return}
+  speechSynthesis.cancel();
+  if(speakingKey===key){speakingKey=null;render();return}
+  const u=new SpeechSynthesisUtterance(text.replace(/[\u{1F000}-\u{1FFFF}☀-➿️]/gu,''));
+  u.lang='fr-FR';const v=frVoice();if(v)u.voice=v;u.rate=.92;u.pitch=1.05;
+  u.onend=u.onerror=()=>{if(speakingKey===key){speakingKey=null;const b=document.querySelector(`[data-speak="${key}"]`);if(b)b.textContent='🔊 Écouter'}};
+  speakingKey=key;speechSynthesis.speak(u);
+  const b=document.querySelector(`[data-speak="${key}"]`);if(b)b.textContent='⏹ Arrêter';
+}
+if(canSpeak){try{speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{}}catch(e){}}
+const speakBtn=key=>canSpeak?`<button class="btn ghost small speak" data-speak="${key}">${speakingKey===key?'⏹ Arrêter':'🔊 Écouter'}</button>`:'';
+function speechFor(key){
+  const [kind,a,b]=key.split(':');
+  if(kind==='cat'){const c=cat(a);return c?`Cherche une œuvre pour ce cadre : ${c.name} ! Quand tu l'as trouvée, on la prend en photo.`:''}
+  if(kind==='turn'){const m=member(a),c=cat(b);return m?`C'est au tour de ${m.name} de voter pour le cadre : ${c?c.name:''}.`:''}
+  if(kind==='clue'){const h=huntOf(a),c=h&&h.cards.find(x=>x.id===b);if(!c)return '';const st=hstate(h.id);
+    return `${c.title}. ${c.intro} Tes missions. ${c.missions.map((t,i)=>`${i+1} : ${t}.`).join(' ')}${st.hints[c.id]?` Indice : ${c.hint}`:''}`}
+  return '';
+}
+/* ---------- écran allumé pendant la visite ---------- */
+let wake=null;
+async function updateWake(){
+  const want=S.keepAwake!==false&&document.visibilityState==='visible'&&['home','cat','vote','ballot','hunt','clue'].includes(view.name);
+  try{
+    if(want&&!wake&&navigator.wakeLock){wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>{wake=null})}
+    else if(!want&&wake){await wake.release();wake=null}
+  }catch(e){wake=null}
+}
+document.addEventListener('visibilitychange',updateWake);
 /* ---------- feuilles ---------- */
 function sheetHTML(){
   if(!sheet) return '';
@@ -859,7 +898,7 @@ function render(){
   $('#app').innerHTML=v();
   const bar=barHTML();$('#bar').innerHTML=bar;$('#bar').hidden=!bar;document.body.classList.toggle('has-bar',!!bar);
   $('#sheet').innerHTML=sheetHTML();
-  hydrate(document.body);popId=null;
+  hydrate(document.body);popId=null;updateWake();
 }
 /* ---------- confettis ---------- */
 function confetti(){
@@ -907,6 +946,7 @@ document.addEventListener('click',e=>{
     if(!wasComplete&&complete()&&!S.celebrated){S.celebrated=true;save();setTimeout(confetti,300)}
     return render();
   }
+  if(d.speak){speak(speechFor(d.speak),d.speak);return}
   /* jeu de piste */
   if(d.hunt){return go({name:'hunt',id:d.hunt})}
   if(d.clue){return go({name:'clue',hunt:view.hunt||view.id,id:d.clue})}
@@ -975,6 +1015,7 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('change',e=>{
   if(e.target.id==='gal'){S.gallery=e.target.checked;save();return}
+  if(e.target.id==='awake'){S.keepAwake=e.target.checked;save();updateWake();return}
   if(e.target.dataset&&e.target.dataset.tick!==undefined&&view.name==='clue'){const st=hstate(view.hunt),i=+e.target.dataset.tick,a=st.ticks[view.id]=st.ticks[view.id]||[];
     if(e.target.checked){if(!a.includes(i))a.push(i)}else st.ticks[view.id]=a.filter(x=>x!==i);save();return}
   if(e.target.id==='huntcam'&&e.target.files[0]){const f=e.target.files[0];e.target.value='';
