@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#E4ECEE" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#132026" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#E4ECEE">
+<meta name="color-scheme" content="light">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Album musée">
@@ -19,15 +19,10 @@ html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px
 :root{
   --wall:#E4ECEE; --wall-2:#D3DFE2; --card:#FAFCFC; --ink:#1C2A31; --ink-soft:#56666E;
   --gold:#B7821C; --gold-2:#E2B550; --coral:#E0533E; --ok:#2F8F5B; --line:#C4D2D6;
+  color-scheme:light;
   --display:"Baloo 2",ui-rounded,"Trebuchet MS",sans-serif;
   --body:"Nunito",ui-rounded,system-ui,sans-serif;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --wall:#132026; --wall-2:#1B2C33; --card:#1F323A; --ink:#EAF1F3; --ink-soft:#9DB0B7;
-  --gold:#E2B550; --gold-2:#F0CB76; --coral:#F06E5A; --ok:#4FBF85; --line:#2E454E; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --wall:#132026; --wall-2:#1B2C33; --card:#1F323A; --ink:#EAF1F3; --ink-soft:#9DB0B7;
-  --gold:#E2B550; --gold-2:#F0CB76; --coral:#F06E5A; --ok:#4FBF85; --line:#2E454E; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--wall);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 40px}
