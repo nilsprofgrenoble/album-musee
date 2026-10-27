@@ -242,6 +242,10 @@ function toGallery(blobs,base,quiet){
   files.forEach((f,i)=>setTimeout(()=>download(f,f.name),i*350));
   if(!quiet) toast(files.length>1?`${files.length} photos enregistrées dans la galerie`:'Photo enregistrée dans la galerie');
 }
+let exportFile=null,exportGen=0;
+function prepareExport(){exportFile=null;const g=++exportGen;
+  exportAlbum().then(f=>{if(g!==exportGen)return;exportFile=f;const b=document.querySelector('[data-export]');
+    if(b){b.disabled=false;b.textContent='📤 Envoyer mon album'}}).catch(()=>{const b=document.querySelector('[data-export]');if(b)b.textContent='Erreur, fermez et réessayez'})}
 let toastT;function toast(m){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';document.body.appendChild(t)}
   t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2800)}
 async function albumImage(){
@@ -278,7 +282,7 @@ async function exportAlbum(){
     for(const p of c.photos){const b=await getBlob(p.id);if(b){const data=await blobToB64(b);if(data)photos.push({id:p.id,by:p.by,ts:p.ts,data})}}
     cats.push({id:c.id,icon:c.icon,name:c.name,photos})}
   const out={app:'album-musee',v:1,sent:Date.now(),title:S.title,family:S.family.map(m=>({id:m.id,name:m.name,icon:m.icon,color:m.color})),cats};
-  return new File([JSON.stringify(out)],`album-${slug(S.title)}-${stamp()}.json`,{type:'application/json'});
+  return new File([JSON.stringify(out)],`album-${slug(S.title)}-${stamp()}.txt`,{type:'text/plain'});
 }
 const norm=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
 function readAlbum(text){try{const A=JSON.parse(text);if(A&&A.app==='album-musee'&&Array.isArray(A.cats))return A}catch(e){}return null}
@@ -511,11 +515,11 @@ function sheetHTML(){
       <h2>Mettre en commun</h2>
       <p class="note">Un téléphone envoie, l'autre reçoit. Les photos rejoignent les bons cadres, sans doublon.</p>
       <div class="step"><div class="row"><span class="num">1</span><h3>Sur le téléphone qui envoie</h3></div>
-        <button class="btn big coral" data-export>📤 Envoyer mon album</button>
+        <button class="btn big coral" data-export ${exportFile?'':'disabled'}>${exportFile?'📤 Envoyer mon album':'Préparation de l’album…'}</button>
         <span class="note">${nb?`${nb} photo${nb>1?'s':''}`:'La préparation (sans photo)'}. Choisissez ${IOS?'AirDrop, Messages ou WhatsApp':'WhatsApp, Messages ou Bluetooth'}.</span></div>
       <div class="step"><div class="row"><span class="num">2</span><h3>Sur le téléphone qui reçoit</h3></div>
         <label class="btn big ghost" style="position:relative">📥 Recevoir un album
-          <input type="file" id="importfile" accept=".json,application/json" style="position:absolute;inset:0;opacity:0;width:100%"></label>
+          <input type="file" id="importfile" accept=".txt,.json,text/plain,application/json" style="position:absolute;inset:0;opacity:0;width:100%"></label>
         <span class="note">${IOS?"Choisissez le fichier reçu (AirDrop le range dans Téléchargements ; dans WhatsApp, enregistrez-le d'abord dans Fichiers).":"Choisissez le fichier reçu (dossier Téléchargements). Encore plus simple si l'appli est installée : dans WhatsApp, touchez le fichier, Partager, puis Album musée."}</span></div>
       <button class="btn ghost" data-close>Fermer</button></div></div>`;
   }
@@ -594,12 +598,14 @@ document.addEventListener('click',e=>{
     return render();
   }
   /* vote */
-  if(d.sharesheet!==undefined){sheet={type:'share'};return render()}
+  if(d.sharesheet!==undefined){sheet={type:'share'};prepareExport();return render()}
   if(d.export!==undefined){
-    t.disabled=true;t.textContent='Préparation…';
-    exportAlbum().then(f=>{t.disabled=false;t.textContent='📤 Envoyer mon album';
-      if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],title:'Album du musée'}).catch(()=>{});
-      else{download(f,f.name);toast('Fichier enregistré dans Téléchargements : envoie-le à l’autre téléphone')}});
+    const f=exportFile; if(!f) return;
+    const fallback=()=>{download(f,f.name);toast("Fichier enregistré dans Téléchargements : envoie-le à l'autre téléphone")};
+    // appelé tout de suite dans le geste, sinon le téléphone bloque le partage
+    if(navigator.canShare&&navigator.canShare({files:[f]})){
+      navigator.share({files:[f]}).catch(err=>{if(!err||err.name!=='AbortError')fallback()});
+    } else fallback();
     return}
   if(d.doimport!==undefined){const A=sheet.album;t.disabled=true;t.textContent='Ajout…';
     mergeAlbum(A).then(n=>{sheet=null;toast(n?`${n} photo${n>1?'s':''} ajoutée${n>1?'s':''} !`:'Préparation reprise');go({name:'home'})});return}
