@@ -270,6 +270,47 @@ async function albumImage(){
   }
   return new Promise(r=>c.toBlob(r,'image/jpeg',.9));
 }
+/* ---------- mise en commun entre téléphones ---------- */
+const blobToB64=b=>new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>res(null);r.readAsDataURL(b)});
+async function exportAlbum(){
+  const cats=[];
+  for(const c of S.cats){const photos=[];
+    for(const p of c.photos){const b=await getBlob(p.id);if(b){const data=await blobToB64(b);if(data)photos.push({id:p.id,by:p.by,ts:p.ts,data})}}
+    cats.push({id:c.id,icon:c.icon,name:c.name,photos})}
+  const out={app:'album-musee',v:1,sent:Date.now(),title:S.title,family:S.family.map(m=>({id:m.id,name:m.name,icon:m.icon,color:m.color})),cats};
+  return new File([JSON.stringify(out)],`album-${slug(S.title)}-${stamp()}.json`,{type:'application/json'});
+}
+const norm=t=>String(t||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+function readAlbum(text){try{const A=JSON.parse(text);if(A&&A.app==='album-musee'&&Array.isArray(A.cats))return A}catch(e){}return null}
+function albumSummary(A){
+  const known=new Set(S.cats.flatMap(c=>c.photos.map(p=>p.id)));
+  const fresh=A.cats.reduce((n,c)=>n+c.photos.filter(p=>!known.has(p.id)).length,0);
+  return {fresh,total:A.cats.reduce((n,c)=>n+c.photos.length,0),cats:A.cats.filter(c=>c.photos.length).length,empty:!S.cats.some(c=>c.photos.length)};
+}
+async function mergeAlbum(A){
+  const mine=S.cats.some(c=>c.photos.length);
+  if(!mine){ // album vide : on reprend la préparation de l'autre téléphone
+    S.title=A.title||S.title;
+    S.family=A.family.map(m=>({id:m.id,name:m.name,icon:m.icon||'🙂',color:m.color||COLORS[0]}));
+    S.cats=A.cats.map(c=>({id:c.id,icon:c.icon,name:c.name,photos:[],votes:{},winner:null}));
+    S.setupDone=true;
+  }
+  const fam={};
+  A.family.forEach(m=>{let l=member(m.id)||S.family.find(x=>norm(x.name)===norm(m.name));
+    if(!l){l={id:m.id,name:m.name,icon:m.icon||'🙂',color:m.color||COLORS[S.family.length%COLORS.length]};S.family.push(l)}
+    fam[m.id]=l.id});
+  const known=new Set(S.cats.flatMap(c=>c.photos.map(p=>p.id)));let added=0;
+  for(const c of A.cats){
+    let l=cat(c.id)||S.cats.find(x=>norm(x.name)===norm(c.name));
+    if(!l){if(!c.photos.length)continue;l={id:c.id,icon:c.icon,name:c.name,photos:[],votes:{},winner:null};S.cats.push(l)}
+    let changed=false;
+    for(const p of c.photos){if(known.has(p.id))continue;
+      try{const b=await (await fetch(p.data)).blob();putBlob(p.id,b);l.photos.push({id:p.id,by:fam[p.by]||p.by,ts:p.ts||Date.now()});known.add(p.id);added++;changed=true}catch(e){}}
+    if(changed){l.photos.sort((a,b)=>a.ts-b.ts);l.votes={};l.skipped={};l.winner=null}
+  }
+  if(added)S.voteCelebrated=false;
+  save();return added;
+}
 /* ---------- helpers ---------- */
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -315,6 +356,7 @@ function homeView(){
     ${starsBlock()}
     <section class="wall">${frames}</section>
     <button class="btn big" data-go="vote" ${nb?'':'disabled'}>Fini ! On vote</button>
+    <button class="btn ghost" data-sharesheet>📲 Mettre en commun avec l'autre téléphone</button>
     <p class="note">Repérez une œuvre, prenez-la en photo, rangez-la dans un cadre. Sans flash !</p>`;
 }
 function catView(){
@@ -339,6 +381,7 @@ function voteView(){
     <button class="back" data-go="home">← Retour à la visite</button>
     <div><div class="eyebrow">Le grand vote</div><h2>Quelle photo garde-t-on ?</h2></div>
     <p class="note">Chacun vote en secret, puis on découvre le résultat. On explique pourquoi on a choisi !</p>
+    <button class="btn ghost small" data-sharesheet>📲 Il manque les photos de l'autre téléphone ?</button>
     ${nx?`<button class="btn big coral" data-vote="${nx.id}">${esc(nx.icon)} Voter : ${esc(nx.name)}</button>`
         :`<button class="btn big" data-go="final">Voir notre album</button>`}
     <div class="list">${items}</div>`;
@@ -428,6 +471,9 @@ function setupView(){
     <section class="step"><div class="row"><span class="num">3</span><h3>Les cadres à remplir</h3></div>
       <p class="note">Choisissez-les ensemble. Touchez le pictogramme pour le changer.</p>
       <div class="list">${cats}</div><button class="btn ghost small" data-addcat>+ Ajouter un cadre</button></section>
+    <section class="step"><h3>Deux téléphones ?</h3>
+      <p class="note">Préparez sur un seul téléphone, puis envoyez la préparation à l'autre : les deux auront les mêmes cadres.</p>
+      <button class="btn ghost small" data-sharesheet>📲 Envoyer ou recevoir un album</button></section>
     <button class="btn big coral" data-start>${S.setupDone?'Retour à la visite':"C'est parti !"}</button>
     <section class="step"><h3>Réglages</h3>
       <label class="check" for="gal"><input type="checkbox" id="gal" ${S.gallery?'checked':''}>Enregistrer aussi chaque photo dans la galerie du téléphone</label>
@@ -458,6 +504,28 @@ function sheetHTML(){
     const picks=S.family.map(m=>`<button class="pick" data-who="${m.id}">${av(m,'lg')}${esc(m.name)}</button>`).join('');
     return `<div class="sheet"><div>${prev}<h2>Qui l'a trouvée ?</h2><div class="row" style="justify-content:center">${picks}</div>
       <div class="row">${view.name==='cat'?'':'<button class="btn ghost small" data-capback>← Autre cadre</button>'}<button class="btn ghost small" data-cancelcap>Annuler</button></div></div></div>`;
+  }
+  if(sheet.type==='share'){
+    const nb=S.cats.reduce((a,c)=>a+c.photos.length,0);
+    return `<div class="sheet" data-backdrop><div>
+      <h2>Mettre en commun</h2>
+      <p class="note">Un téléphone envoie, l'autre reçoit. Les photos rejoignent les bons cadres, sans doublon.</p>
+      <div class="step"><div class="row"><span class="num">1</span><h3>Sur le téléphone qui envoie</h3></div>
+        <button class="btn big coral" data-export>📤 Envoyer mon album</button>
+        <span class="note">${nb?`${nb} photo${nb>1?'s':''}`:'La préparation (sans photo)'}. Choisissez ${IOS?'AirDrop, Messages ou WhatsApp':'WhatsApp, Messages ou Bluetooth'}.</span></div>
+      <div class="step"><div class="row"><span class="num">2</span><h3>Sur le téléphone qui reçoit</h3></div>
+        <label class="btn big ghost" style="position:relative">📥 Recevoir un album
+          <input type="file" id="importfile" accept=".json,application/json" style="position:absolute;inset:0;opacity:0;width:100%"></label>
+        <span class="note">${IOS?"Choisissez le fichier reçu (AirDrop le range dans Téléchargements ; dans WhatsApp, enregistrez-le d'abord dans Fichiers).":"Choisissez le fichier reçu (dossier Téléchargements). Encore plus simple si l'appli est installée : dans WhatsApp, touchez le fichier, Partager, puis Album musée."}</span></div>
+      <button class="btn ghost" data-close>Fermer</button></div></div>`;
+  }
+  if(sheet.type==='import'){
+    const A=sheet.album,sm=albumSummary(A);
+    return `<div class="sheet"><div><h2>Album reçu</h2>
+      <p style="margin:0"><strong>${esc(A.title)}</strong> · ${sm.total} photo${sm.total>1?'s':''} dans ${sm.cats} cadre${sm.cats>1?'s':''}</p>
+      <p class="note">${sm.empty?"Ton album est vide : il reprend les cadres et la famille de l'autre téléphone.":sm.fresh?`${sm.fresh} nouvelle${sm.fresh>1?'s':''} photo${sm.fresh>1?'s':''} à ajouter. Les votes des cadres concernés repartent de zéro.`:'Tu as déjà toutes ces photos.'}</p>
+      <button class="btn big coral" data-doimport ${sm.empty||sm.fresh?'':'disabled'}>${sm.empty&&!sm.fresh?'Reprendre la préparation':'Ajouter à mon album'}</button>
+      <button class="btn ghost" data-close>Annuler</button></div></div>`;
   }
   if(sheet.type==='icon'){
     const isFam=sheet.kind==='fam',obj=isFam?member(sheet.id):cat(sheet.id);
@@ -526,6 +594,15 @@ document.addEventListener('click',e=>{
     return render();
   }
   /* vote */
+  if(d.sharesheet!==undefined){sheet={type:'share'};return render()}
+  if(d.export!==undefined){
+    t.disabled=true;t.textContent='Préparation…';
+    exportAlbum().then(f=>{t.disabled=false;t.textContent='📤 Envoyer mon album';
+      if(navigator.canShare&&navigator.canShare({files:[f]}))navigator.share({files:[f],title:'Album du musée'}).catch(()=>{});
+      else{download(f,f.name);toast('Fichier enregistré dans Téléchargements : envoie-le à l’autre téléphone')}});
+    return}
+  if(d.doimport!==undefined){const A=sheet.album;t.disabled=true;t.textContent='Ajout…';
+    mergeAlbum(A).then(n=>{sheet=null;toast(n?`${n} photo${n>1?'s':''} ajoutée${n>1?'s':''} !`:'Préparation reprise');go({name:'home'})});return}
   if(d.vote) return go({name:'ballot',id:d.vote});
   if(d.ready){view.ready=d.ready;return render()}
   if(d.ballot){const c=cat(view.id),v=S.family.find(m=>!c.photos.some(p=>p.id===c.votes[m.id])&&!(c.skipped||{})[m.id]);
@@ -561,6 +638,8 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('change',e=>{
   if(e.target.id==='gal'){S.gallery=e.target.checked;save();return}
+  if(e.target.id==='importfile'&&e.target.files[0]){const f=e.target.files[0];e.target.value='';
+    f.text().then(txt=>{const A=readAlbum(txt);if(!A){toast("Ce fichier n'est pas un album du musée");return}sheet={type:'import',album:A};render()});return}
   if(e.target.id==='cam'&&e.target.files[0]){
     const f=e.target.files[0];e.target.value='';
     pending={file:f,url:URL.createObjectURL(f)};
@@ -576,6 +655,11 @@ document.addEventListener('input',e=>{
   save();
 });
 render();
+if(/[?&]shared=1/.test(location.search)&&'caches' in window){
+  history.replaceState(null,'',location.pathname);
+  caches.open('share').then(c=>c.match('shared-album').then(r=>{if(!r)return;c.delete('shared-album');
+    r.text().then(txt=>{const A=readAlbum(txt);if(A){sheet={type:'import',album:A};render()}else toast("Ce fichier n'est pas un album du musée")})}));
+}
 if('serviceWorker' in navigator) addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 })();
