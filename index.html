@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#E4ECEE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#132026" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Album musée">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Album du musée</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700&display=swap">
+<style>
+html{-webkit-text-size-adjust:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+/* Layout : un mur de musée, chaque catégorie est un cadre doré à remplir ; une colonne sur téléphone */
+:root{
+  --wall:#E4ECEE; --wall-2:#D3DFE2; --card:#FAFCFC; --ink:#1C2A31; --ink-soft:#56666E;
+  --gold:#B7821C; --gold-2:#E2B550; --coral:#E0533E; --ok:#2F8F5B; --line:#C4D2D6;
+  --display:"Baloo 2",ui-rounded,"Trebuchet MS",sans-serif;
+  --body:"Nunito",ui-rounded,system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --wall:#132026; --wall-2:#1B2C33; --card:#1F323A; --ink:#EAF1F3; --ink-soft:#9DB0B7;
+  --gold:#E2B550; --gold-2:#F0CB76; --coral:#F06E5A; --ok:#4FBF85; --line:#2E454E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --wall:#132026; --wall-2:#1B2C33; --card:#1F323A; --ink:#EAF1F3; --ink-soft:#9DB0B7;
+  --gold:#E2B550; --gold-2:#F0CB76; --coral:#F06E5A; --ok:#4FBF85; --line:#2E454E; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--wall);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 40px}
+main{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--display);line-height:1.1;margin:0;text-wrap:balance}
+h1{font-size:1.9rem;font-weight:800}
+h2{font-size:1.4rem;font-weight:700}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible,input:focus-visible,label:focus-within{outline:3px solid var(--gold);outline-offset:2px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.eyebrow{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);font-weight:700}
+.btn{background:var(--gold);color:#fff;font-weight:700;padding:12px 18px;border-radius:999px;font-family:var(--display);font-size:1.1rem}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line)}
+.btn.coral{background:var(--coral)}
+.btn.big{width:100%;padding:16px;font-size:1.3rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.icon-btn{width:44px;height:44px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:1.2rem;flex:none}
+
+/* étoiles */
+.stars{background:var(--card);border-radius:18px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;border:2px solid var(--line)}
+.starline{display:flex;gap:4px;flex-wrap:wrap;font-size:1.7rem;line-height:1}
+.star{color:var(--line);transition:transform .3s}
+.star.on{color:var(--gold-2);transform:scale(1.08)}
+.star.bonus{font-size:2.3rem}
+.stars small{color:var(--ink-soft);font-weight:600}
+
+/* cadres */
+.wall{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.frame{background:var(--card);border-radius:6px;padding:8px;text-align:left;display:flex;flex-direction:column;gap:8px;
+  box-shadow:0 0 0 5px var(--gold),0 0 0 7px var(--gold-2),0 8px 18px rgba(0,0,0,.18);margin:7px;position:relative}
+.frame .pic{aspect-ratio:1;border-radius:3px;background:var(--wall-2);display:grid;place-items:center;font-size:3rem;overflow:hidden;max-width:100%}
+.frame .pic img{width:100%;height:100%;object-fit:cover}
+.frame .cartel{font-size:.88rem;font-weight:700;line-height:1.2;min-height:2.4em}
+.frame .count{position:absolute;top:2px;right:2px;background:var(--coral);color:#fff;border-radius:999px;min-width:28px;height:28px;
+  display:grid;place-items:center;font-weight:800;font-size:.9rem;padding:0 6px}
+.frame .badge{position:absolute;top:-2px;left:-2px;font-size:1.6rem;color:var(--gold-2);text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.frame.empty .pic{border:2px dashed var(--line)}
+
+/* catégorie */
+.cat-head{display:flex;gap:12px;align-items:center}
+.cat-head .big-ico{font-size:3rem;line-height:1}
+.add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--coral);color:#fff;
+  border-radius:20px;padding:18px;font-family:var(--display);font-size:1.4rem;font-weight:700;cursor:pointer}
+.add input{position:absolute;opacity:0;width:1px;height:1px}
+.add span{font-size:2.4rem;line-height:1}
+.thumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.thumb{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;background:var(--wall-2);max-width:100%}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .who{position:absolute;bottom:4px;left:4px}
+.thumb.win{box-shadow:0 0 0 4px var(--gold-2)}
+
+.av{width:34px;height:34px;border-radius:50%;display:inline-grid;place-items:center;color:#fff;font-weight:800;font-family:var(--display);
+  font-size:1rem;flex:none;border:2px solid var(--card)}
+.av.lg{width:64px;height:64px;font-size:1.6rem;border-width:3px}
+.pick{display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:700;font-size:.9rem;padding:6px;border-radius:14px}
+.pick.sel{background:var(--wall-2)}
+.pick.done{opacity:.4}
+
+/* overlay */
+.sheet{position:fixed;inset:0;background:rgba(10,18,22,.72);display:flex;align-items:flex-end;justify-content:center;z-index:20;
+  padding:max(12px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.sheet>div{background:var(--card);border-radius:22px;padding:18px;width:100%;max-width:560px;max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:14px}
+.sheet img.full{width:100%;border-radius:12px;max-height:60vh;object-fit:contain;background:var(--wall-2)}
+
+/* vote */
+.vote-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.vote-card{position:relative;border-radius:14px;overflow:hidden;aspect-ratio:1;background:var(--wall-2);max-width:100%}
+.vote-card img{width:100%;height:100%;object-fit:cover;display:block}
+.vote-card .tally{position:absolute;right:6px;bottom:6px;display:flex;gap:2px}
+.vote-card.lead{box-shadow:0 0 0 4px var(--gold-2)}
+.list{display:flex;flex-direction:column;gap:10px}
+.item{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;padding:10px 12px;border:2px solid var(--line);text-align:left;width:100%}
+.item .ico{font-size:1.8rem}
+.item .grow{flex:1;min-width:0;font-weight:700}
+.item .state{font-size:.85rem;color:var(--ink-soft);font-weight:700}
+.item .state.ok{color:var(--ok)}
+.note{color:var(--ink-soft);font-size:.92rem}
+.field{display:flex;gap:8px;align-items:center}
+.field input{flex:1;min-width:0;font:inherit;padding:10px 12px;border-radius:12px;border:2px solid var(--line);background:var(--wall);color:var(--ink)}
+.field input.emo{flex:0 0 56px;text-align:center;font-size:1.3rem}
+.podium{display:flex;flex-direction:column;gap:8px}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--wall);padding:10px 16px;border-radius:12px;font-weight:700;z-index:40;max-width:calc(100% - 32px);text-align:center}
+canvas#confetti{position:fixed;inset:0;pointer-events:none;z-index:30}
+@media (prefers-reduced-motion:reduce){.star{transition:none}}
+@media (min-width:600px){.wall{grid-template-columns:repeat(3,minmax(0,1fr))}.thumbs{grid-template-columns:repeat(4,minmax(0,1fr))}}
+</style>
+
+<body>
+<main id="app"></main>
+<canvas id="confetti" hidden></canvas>
+
+<script>
+(function(){
+const COLORS=['#2E6FB7','#D2473A','#2F8F5B','#8A4FBF','#D9822B','#1E8C93'];
+const uid=()=>Math.random().toString(36).slice(2,9);
+const DEFAULT_CATS=[
+  ['😂','La plus rigolote'],['😱','Celle qui fait le plus peur'],['🤔',"Celle qu'on ne comprend pas du tout"],
+  ['😍','La plus belle'],['🐾',"Celle avec le plus d'animaux"],['🏠',"Celle où on aimerait vivre"],
+  ['🎨','La plus colorée'],['🗿','La sculpture la plus bizarre']];
+function freshState(prev){
+  return {
+    title: prev?prev.title:'Musée de Grenoble',
+    family: prev?prev.family:[['Papa',0],['Maman',1],['Enfant 1',2],['Enfant 2',3]].map(([n,c])=>({id:uid(),name:n,color:COLORS[c]})),
+    cats: (prev?prev.cats.map(c=>[c.icon,c.name]):DEFAULT_CATS).map(([i,n])=>({id:uid(),icon:i,name:n,photos:[],votes:{},winner:null})),
+    celebrated:false, voteCelebrated:false, gallery: prev?prev.gallery!==false:true
+  };
+}
+/* ---------- stockage ---------- */
+let S;
+try{S=JSON.parse(localStorage.getItem('albumMusee')||'null')}catch(e){S=null}
+if(!S) S=freshState();
+if(S.gallery===undefined) S.gallery=true;
+function save(){try{localStorage.setItem('albumMusee',JSON.stringify(S))}catch(e){}}
+let db=null; const mem=new Map(); const urls=new Map();
+try{
+  const r=indexedDB.open('albumMuseePhotos',1);
+  r.onupgradeneeded=()=>r.result.createObjectStore('p');
+  r.onsuccess=()=>{db=r.result;render()};
+  r.onerror=()=>{db=null};
+}catch(e){db=null}
+function putBlob(id,blob){
+  mem.set(id,blob);
+  if(!db) return;
+  try{db.transaction('p','readwrite').objectStore('p').put(blob,id)}catch(e){}
+}
+function delBlob(id){
+  mem.delete(id); if(urls.has(id)){URL.revokeObjectURL(urls.get(id));urls.delete(id)}
+  if(!db) return; try{db.transaction('p','readwrite').objectStore('p').delete(id)}catch(e){}
+}
+function clearBlobs(){mem.clear();urls.forEach(u=>URL.revokeObjectURL(u));urls.clear();
+  if(db){try{db.transaction('p','readwrite').objectStore('p').clear()}catch(e){}}}
+/* remplit les <img data-pid> une fois le blob trouvé */
+function hydrate(root){
+  root.querySelectorAll('img[data-pid]').forEach(img=>{
+    const id=img.dataset.pid;
+    if(urls.has(id)){img.src=urls.get(id);return}
+    const set=b=>{if(!b)return;const u=URL.createObjectURL(b);urls.set(id,u);img.src=u};
+    if(mem.has(id)) return set(mem.get(id));
+    if(!db) return;
+    try{const q=db.transaction('p').objectStore('p').get(id);q.onsuccess=()=>{if(q.result){mem.set(id,q.result);set(q.result)}}}catch(e){}
+  });
+}
+async function compress(file){
+  try{
+    const bmp=await createImageBitmap(file);
+    const k=Math.min(1,1280/Math.max(bmp.width,bmp.height));
+    const c=document.createElement('canvas');c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);
+    c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);
+    return await new Promise(res=>c.toBlob(b=>res(b||file),'image/jpeg',.82));
+  }catch(e){return file}
+}
+/* ---------- galerie du téléphone ---------- */
+const IOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const stamp=()=>{const d=new Date(),z=n=>String(n).padStart(2,'0');return `${d.getFullYear()}${z(d.getMonth()+1)}${z(d.getDate())}-${z(d.getHours())}${z(d.getMinutes())}${z(d.getSeconds())}`};
+const slug=t=>t.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'').toLowerCase().slice(0,40);
+function download(blob,name){const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000)}
+/* À appeler directement dans un geste (tap) : iPhone = feuille de partage (« Enregistrer l'image »), Android = téléchargement visible dans la galerie */
+function toGallery(blobs,base){
+  const files=blobs.map((b,i)=>new File([b],`${base}${blobs.length>1?'-'+(i+1):''}.jpg`,{type:b.type||'image/jpeg'}));
+  if(IOS&&navigator.canShare&&navigator.canShare({files})){navigator.share({files}).catch(()=>{});return}
+  files.forEach((f,i)=>setTimeout(()=>download(f,f.name),i*350));
+  toast(files.length>1?`${files.length} photos enregistrées dans la galerie (dossier Téléchargements)`:'Photo enregistrée dans la galerie (dossier Téléchargements)');
+}
+function getBlob(id){return new Promise(res=>{if(mem.has(id))return res(mem.get(id));if(!db)return res(null);
+  try{const q=db.transaction('p').objectStore('p').get(id);q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)}catch(e){res(null)}})}
+let toastT;function toast(m){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';document.body.appendChild(t)}
+  t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,3200)}
+/* image de l'album final, dessinée sur un canvas */
+async function albumImage(){
+  const W=1080,pad=48,colW=(W-pad*3)/2,picH=colW,capH=96,rowH=picH+capH+44;
+  const cats=S.cats.filter(c=>c.photos.length);
+  const rows=Math.ceil(cats.length/2),H=230+rows*rowH+60;
+  const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+  x.fillStyle='#E4ECEE';x.fillRect(0,0,W,H);
+  try{await document.fonts.ready}catch(e){}
+  x.fillStyle='#56666E';x.font='700 26px Nunito,sans-serif';x.fillText(new Date().toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}).toUpperCase(),pad,80);
+  x.fillStyle='#1C2A31';x.font='800 64px "Baloo 2",sans-serif';x.fillText(S.title,pad,150);
+  x.fillStyle='#B7821C';x.font='700 30px Nunito,sans-serif';x.fillText('★'.repeat(filled())+(complete()?'  Album complet !':''),pad,200);
+  for(let i=0;i<cats.length;i++){
+    const ct=cats[i],p=ct.photos.find(q=>q.id===ct.winner)||ct.photos[ct.photos.length-1];
+    const cx=pad+(i%2)*(colW+pad),cy=230+Math.floor(i/2)*rowH;
+    x.fillStyle='#E2B550';x.fillRect(cx-14,cy-14,colW+28,picH+capH+28);
+    x.fillStyle='#B7821C';x.fillRect(cx-8,cy-8,colW+16,picH+capH+16);
+    x.fillStyle='#FAFCFC';x.fillRect(cx,cy,colW,picH+capH);
+    const b=await getBlob(p.id);
+    if(b){try{const im=await createImageBitmap(b);const k=Math.max(colW/im.width,picH/im.height),w=im.width*k,h=im.height*k;
+      x.save();x.beginPath();x.rect(cx+10,cy+10,colW-20,picH-20);x.clip();x.drawImage(im,cx+10+(colW-20-w)/2,cy+10+(picH-20-h)/2,w,h);x.restore()}catch(e){}}
+    x.fillStyle='#1C2A31';x.font='700 28px Nunito,sans-serif';
+    let t=`${ct.icon} ${ct.name}`;while(x.measureText(t).width>colW-24&&t.length>4)t=t.slice(0,-2)+'…';
+    x.fillText(t,cx+12,cy+picH+30);
+    const m=member(p.by);if(m){x.fillStyle='#56666E';x.font='600 24px Nunito,sans-serif';x.fillText('trouvée par '+m.name,cx+12,cy+picH+66)}
+  }
+  return new Promise(r=>c.toBlob(r,'image/jpeg',.9));
+}
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const member=id=>S.family.find(m=>m.id===id);
+const av=(m,cls='')=>m?`<span class="av ${cls}" style="background:${m.color}">${esc(m.name.trim().charAt(0).toUpperCase()||'?')}</span>`:'';
+const cat=id=>S.cats.find(c=>c.id===id);
+const filled=()=>S.cats.filter(c=>c.photos.length).length;
+const complete=()=>S.cats.length>0&&filled()===S.cats.length;
+const coverOf=c=>c.photos.find(p=>p.id===c.winner)||c.photos[c.photos.length-1];
+let installEvt=null;addEventListener('beforeinstallprompt',e=>{e.preventDefault();installEvt=e;if(view.name==='setup')render()});
+let view={name:'home'}; let sheet=null; let pendingFile=null; let confirmKey=null;
+function go(v){view=v;sheet=null;confirmKey=null;render();window.scrollTo(0,0)}
+
+/* ---------- écrans ---------- */
+function starsBlock(){
+  const n=filled(),t=S.cats.length;
+  let s='';for(let i=0;i<t;i++) s+=`<span class="star ${i<n?'on':''}" aria-hidden="true">★</span>`;
+  const bonus=complete();
+  return `<section class="stars" aria-label="${n} étoiles sur ${t}">
+    <div class="row" style="justify-content:space-between"><span class="eyebrow">Étoiles de la famille</span><strong>${n} / ${t}</strong></div>
+    <div class="starline">${s}<span class="star bonus ${bonus?'on':''}" aria-hidden="true">★</span></div>
+    <small>${bonus?"Album complet ! La grande étoile est à vous.":`Encore ${t-n} cadre${t-n>1?'s':''} à remplir pour gagner la grande étoile.`}</small>
+  </section>`;
+}
+function homeView(){
+  const frames=S.cats.map(c=>{
+    const p=coverOf(c);
+    return `<button class="frame ${p?'':'empty'}" data-open="${c.id}">
+      ${p?`<span class="badge" aria-hidden="true">★</span>`:''}
+      <span class="pic">${p?`<img data-pid="${p.id}" alt="">`:esc(c.icon)}</span>
+      <span class="cartel">${p?esc(c.icon)+' ':''}${esc(c.name)}</span>
+      ${c.photos.length>1?`<span class="count">${c.photos.length}</span>`:''}
+    </button>`}).join('');
+  const nb=S.cats.reduce((a,c)=>a+c.photos.length,0);
+  return `<div class="top"><div><div class="eyebrow">Notre album</div><h1>${esc(S.title)}</h1></div>
+      <button class="icon-btn" data-go="setup" aria-label="Préparer l'album">⚙</button></div>
+    ${starsBlock()}
+    <section class="wall">${frames}</section>
+    <button class="btn big ${nb?'':'ghost'}" data-go="vote" ${nb?'':'disabled'}>On vote !</button>
+    <p class="note">Touchez un cadre pour y ajouter des photos. À la fin de la visite, on choisit ensemble la photo qui reste dans chaque cadre.</p>`;
+}
+function catView(){
+  const c=cat(view.id); if(!c) return homeView();
+  const thumbs=c.photos.map(p=>`<button class="thumb ${p.id===c.winner?'win':''}" data-photo="${p.id}" aria-label="Voir la photo">
+     <img data-pid="${p.id}" alt=""><span class="who">${av(member(p.by))}</span></button>`).join('');
+  return `<div class="top"><button class="btn ghost" data-go="home">← Album</button></div>
+    <div class="cat-head"><span class="big-ico" aria-hidden="true">${esc(c.icon)}</span><h2>${esc(c.name)}</h2></div>
+    <label class="add"><span aria-hidden="true">📷</span>Prendre une photo
+      <input type="file" id="cam" accept="image/*" capture="environment"></label>
+    ${c.photos.length?`<div class="eyebrow">${c.photos.length} photo${c.photos.length>1?'s':''} dans ce cadre</div><div class="thumbs">${thumbs}</div>`
+      :`<p class="note">Pas encore de photo. Cherchez une œuvre qui correspond, puis prenez-la en photo (sans flash).</p>`}`;
+}
+function voteView(){
+  const items=S.cats.map(c=>{
+    let st,ok=false;
+    if(!c.photos.length) st='vide';
+    else if(c.winner||c.photos.length===1){st='choisie';ok=true}
+    else st=`${c.photos.length} photos à départager`;
+    return `<button class="item" data-vote="${c.id}" ${c.photos.length?'':'disabled'}>
+      <span class="ico" aria-hidden="true">${esc(c.icon)}</span><span class="grow">${esc(c.name)}</span>
+      <span class="state ${ok?'ok':''}">${ok?'✓ ':''}${st}</span></button>`}).join('');
+  const allDone=S.cats.every(c=>!c.photos.length||c.winner||c.photos.length===1);
+  return `<div class="top"><button class="btn ghost" data-go="home">← Album</button></div>
+    <div><div class="eyebrow">Le grand vote</div><h2>Quelle photo garde-t-on ?</h2></div>
+    <p class="note">Pour chaque cadre, chacun choisit sa photo préférée et dit pourquoi. En cas d'égalité, un parent départage.</p>
+    <div class="list">${items}</div>
+    <button class="btn big" data-go="final" ${allDone?'':'disabled'}>Voir notre album final</button>`;
+}
+function ballotView(){
+  const c=cat(view.id); if(!c) return voteView();
+  if(c.photos.length===1&&!c.winner){c.winner=c.photos[0].id;save()}
+  const tally={};c.photos.forEach(p=>tally[p.id]=[]);
+  Object.entries(c.votes).forEach(([m,p])=>{if(tally[p]&&member(m))tally[p].push(m)});
+  const voted=S.family.filter(m=>c.votes[m.id]&&tally[c.votes[m.id]]);
+  const allVoted=voted.length===S.family.length;
+  const max=Math.max(0,...Object.values(tally).map(a=>a.length));
+  const leaders=c.photos.filter(p=>tally[p.id].length===max&&max>0).map(p=>p.id);
+  if(allVoted&&leaders.length===1&&!c.winner){c.winner=leaders[0];save()}
+  const tie=allVoted&&leaders.length>1&&!c.winner;
+  const voter=view.voter&&!c.votes[view.voter]?view.voter:(S.family.find(m=>!c.votes[m.id]||!tally[c.votes[m.id]])||{}).id;
+  const picks=S.family.map(m=>`<button class="pick ${m.id===voter&&!allVoted?'sel':''} ${c.votes[m.id]&&tally[c.votes[m.id]]?'done':''}" data-voter="${m.id}">
+     ${av(m,'lg')}${esc(m.name)}</button>`).join('');
+  const cards=c.photos.map(p=>`<button class="vote-card ${(c.winner===p.id)||(tie&&leaders.includes(p.id))?'lead':''}" data-ballot="${p.id}" ${c.winner||(allVoted&&!tie)||(tie&&!leaders.includes(p.id))?'disabled':''}>
+     <img data-pid="${p.id}" alt="Photo trouvée par ${esc(member(p.by)?.name||'')}"><span class="tally">${tally[p.id].map(m=>av(member(m))).join('')}</span></button>`).join('');
+  let msg;
+  if(c.winner){const w=c.photos.find(p=>p.id===c.winner);msg=`<strong>C'est choisi !</strong> ${w&&member(w.by)?`Photo trouvée par ${esc(member(w.by).name)}.`:''}`}
+  else if(tie) msg=`<strong>Égalité !</strong> Un parent touche la photo qui gagne.`;
+  else msg=`<strong>${esc(member(voter)?.name||'')}</strong>, touche ta photo préférée. Pourquoi celle-là ?`;
+  return `<div class="top"><button class="btn ghost" data-go="vote">← Le vote</button></div>
+    <div class="cat-head"><span class="big-ico" aria-hidden="true">${esc(c.icon)}</span><h2>${esc(c.name)}</h2></div>
+    ${c.winner?'':`<div class="row" style="justify-content:center">${picks}</div>`}
+    <p style="text-align:center;margin:0">${msg}</p>
+    <div class="vote-grid">${cards}</div>
+    ${c.winner?`<div class="row"><button class="btn" data-go="vote">Cadre suivant</button>
+      <button class="btn ghost" data-revote="${c.id}">Revoter</button></div>`:''}`;
+}
+function finalView(){
+  const wins={};S.family.forEach(m=>wins[m.id]=0);
+  const frames=S.cats.map(c=>{
+    const p=c.photos.find(x=>x.id===c.winner)||(c.photos.length===1?c.photos[0]:null);
+    if(p&&wins[p.by]!==undefined) wins[p.by]++;
+    return `<div class="frame ${p?'':'empty'}"><span class="pic">${p?`<img data-pid="${p.id}" alt="">`:esc(c.icon)}</span>
+      <span class="cartel">${esc(c.icon)} ${esc(c.name)}</span>${p?`<span class="row" style="gap:6px">${av(member(p.by))}<small>${esc(member(p.by)?.name||'')}</small></span>`:''}</div>`}).join('');
+  const pod=S.family.slice().sort((a,b)=>wins[b.id]-wins[a.id]).map(m=>`<div class="item">${av(m)}<span class="grow">${esc(m.name)}</span>
+     <span class="starline" style="font-size:1.3rem">${'<span class="star on">★</span>'.repeat(wins[m.id])||'<small class="note">pas encore</small>'}</span></div>`).join('');
+  return `<div class="top"><button class="btn ghost" data-go="vote">← Le vote</button></div>
+    <div><div class="eyebrow">Album terminé</div><h1>${esc(S.title)}</h1></div>
+    ${starsBlock()}
+    <section class="wall">${frames}</section>
+    <div><div class="eyebrow" style="margin-bottom:8px">Qui a trouvé les photos gagnantes</div><div class="podium">${pod}</div></div>
+    <div class="list"><button class="btn big" data-exportalbum>Enregistrer l'album en image</button>
+    <button class="btn ghost" data-exportall>Enregistrer toutes les photos dans la galerie</button></div>`;
+}
+function setupView(){
+  const fam=S.family.map((m,i)=>`<div class="field">${av(m)}<input id="fam-${m.id}" data-fam="${m.id}" value="${esc(m.name)}" aria-label="Prénom">
+    ${S.family.length>1?`<button class="icon-btn" data-delfam="${m.id}" aria-label="Retirer">✕</button>`:''}</div>`).join('');
+  const cats=S.cats.map(c=>`<div class="field"><input class="emo" id="ico-${c.id}" data-ico="${c.id}" value="${esc(c.icon)}" aria-label="Pictogramme">
+    <input id="cat-${c.id}" data-catname="${c.id}" value="${esc(c.name)}" aria-label="Nom de la catégorie">
+    <button class="icon-btn" data-delcat="${c.id}" aria-label="Supprimer">${confirmKey==='cat'+c.id?'?':'✕'}</button></div>`).join('');
+  return `<div class="top"><button class="btn ghost" data-go="home">← Album</button></div>
+    <div><div class="eyebrow">À la maison, avant la visite</div><h2>Préparer l'album</h2></div>
+    <div class="field"><input id="title" value="${esc(S.title)}" aria-label="Nom du musée"></div>
+    <div class="eyebrow">La famille</div><div class="list">${fam}</div>
+    <button class="btn ghost" data-addfam>+ Ajouter quelqu'un</button>
+    <div class="eyebrow">Les cadres à remplir</div><div class="list">${cats}</div>
+    <button class="btn ghost" data-addcat>+ Ajouter un cadre</button>
+    ${confirmKey&&confirmKey.startsWith('cat')?`<p class="note">Ce cadre contient des photos : touchez encore « ? » pour le supprimer avec ses photos.</p>`:''}
+    <div class="eyebrow">Photos</div>
+    <label class="item" for="gal"><input type="checkbox" id="gal" ${S.gallery?'checked':''} style="width:22px;height:22px">
+      <span class="grow">Enregistrer aussi chaque photo dans la galerie du téléphone</span></label>
+    <p class="note">${IOS?"Sur iPhone, une fenêtre s'ouvre après chaque photo : touchez « Enregistrer l'image ».":"Sur Android, les photos arrivent dans la galerie, dossier Téléchargements."}</p>
+    <div class="eyebrow">Installer l'appli</div>
+    ${installEvt?`<button class="btn" data-install>Ajouter à l'écran d'accueil</button>`:`<p class="note">${IOS?"Dans Safari, touchez Partager puis « Sur l'écran d'accueil ». L'album marche ensuite sans réseau.":"Dans Chrome, menu ⋮ puis « Ajouter à l'écran d'accueil » (ou « Installer l'application »). L'album marche ensuite sans réseau."}</p>`}
+    <div class="eyebrow">Nouvelle visite</div>
+    <p class="note">Garde la famille et les cadres, efface toutes les photos et les votes.</p>
+    <button class="btn coral" data-reset>${confirmKey==='reset'?'Touchez encore pour tout effacer':'Commencer une nouvelle visite'}</button>`;
+}
+function photoSheet(){
+  const c=cat(sheet.cat),p=c&&c.photos.find(x=>x.id===sheet.id); if(!p) return '';
+  const m=member(p.by);
+  return `<div class="sheet" data-close><div>
+    <img class="full" data-pid="${p.id}" alt="">
+    <div class="row">${av(m)}<span>Trouvée par <strong>${esc(m?.name||'?')}</strong></span></div>
+    <div class="row"><button class="btn" data-close>Fermer</button>
+    <button class="btn ghost" data-savephoto="${p.id}">Enregistrer dans la galerie</button>
+    <button class="btn ghost" data-delphoto="${p.id}">${confirmKey==='ph'+p.id?'Touchez encore pour retirer':'Retirer la photo'}</button></div></div></div>`;
+}
+function whoSheet(){
+  const picks=S.family.map(m=>`<button class="pick" data-who="${m.id}">${av(m,'lg')}${esc(m.name)}</button>`).join('');
+  return `<div class="sheet"><div><h2>Qui l'a trouvée ?</h2><div class="row" style="justify-content:center">${picks}</div>
+    <button class="btn ghost" data-cancelwho>Annuler</button></div></div>`;
+}
+function render(){
+  const v={home:homeView,cat:catView,vote:voteView,ballot:ballotView,final:finalView,setup:setupView}[view.name]||homeView;
+  $('#app').innerHTML=v()+(sheet?(sheet.type==='photo'?photoSheet():whoSheet()):'');
+  hydrate($('#app'));
+}
+/* ---------- confettis ---------- */
+function confetti(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cv=$('#confetti'),ctx=cv.getContext('2d');cv.hidden=false;
+  cv.width=innerWidth;cv.height=innerHeight;
+  const cols=['#E2B550','#E0533E','#2E6FB7','#2F8F5B','#8A4FBF'];
+  const ps=Array.from({length:140},()=>({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.5,
+    vx:(Math.random()-.5)*3,vy:2+Math.random()*3,r:Math.random()*6.3,s:5+Math.random()*6,c:cols[Math.random()*5|0]}));
+  let t=0;(function f(){ctx.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=.1;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.fillStyle=p.c;ctx.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);ctx.restore()});
+    if(++t<200) requestAnimationFrame(f); else cv.hidden=true})();
+}
+/* ---------- événements ---------- */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button,[data-close]'); if(!t) return;
+  const d=t.dataset;
+  if(d.go){ if(d.go==='final'&&!S.voteCelebrated){S.voteCelebrated=true;save();setTimeout(confetti,200)} return go({name:d.go})}
+  if(d.open) return go({name:'cat',id:d.open});
+  if(d.photo){sheet={type:'photo',cat:view.id,id:d.photo};confirmKey=null;return render()}
+  if(d.close!==undefined&&(t.matches('[data-close]'))&&!d.delphoto){if(t.classList.contains('sheet')&&e.target!==t)return;sheet=null;return render()}
+  if(d.delphoto){
+    if(confirmKey!=='ph'+d.delphoto){confirmKey='ph'+d.delphoto;return render()}
+    const c=cat(view.id);c.photos=c.photos.filter(p=>p.id!==d.delphoto);
+    if(c.winner===d.delphoto)c.winner=null; c.votes={}; c.winner=null; delBlob(d.delphoto);
+    S.voteCelebrated=false;save();sheet=null;confirmKey=null;return render();
+  }
+  if(d.who){
+    const c=cat(view.id),f=pendingFile;pendingFile=null;sheet=null;
+    if(S.gallery&&f) toGallery([f],`${slug(S.title)}-${slug(c.name)}-${stamp()}`);
+    const wasComplete=complete();
+    compress(f).then(b=>{const id=uid();putBlob(id,b);c.photos.push({id,by:d.who,ts:Date.now()});c.votes={};c.winner=null;S.voteCelebrated=false;
+      if(!wasComplete&&complete()&&!S.celebrated){S.celebrated=true;setTimeout(confetti,300)}
+      save();render()});
+    return render();
+  }
+  if(d.cancelwho!==undefined){pendingFile=null;sheet=null;return render()}
+  if(d.savephoto){getBlob(d.savephoto).then(b=>{if(b)toGallery([b],`${slug(S.title)}-${stamp()}`)});return}
+  if(d.exportall!==undefined){
+    Promise.all(S.cats.flatMap(c=>c.photos.map(p=>getBlob(p.id)))).then(bs=>{bs=bs.filter(Boolean);if(bs.length)toGallery(bs,`${slug(S.title)}-${stamp()}`)});return}
+  if(d.exportalbum!==undefined){t.disabled=true;t.textContent='Préparation…';
+    albumImage().then(b=>{t.disabled=false;t.textContent="Enregistrer l'album en image";if(!b)return;
+      const f=new File([b],`album-${slug(S.title)}-${stamp()}.jpg`,{type:'image/jpeg'});
+      if(navigator.canShare&&navigator.canShare({files:[f]})) navigator.share({files:[f]}).catch(()=>download(f,f.name)); else {download(f,f.name);toast("Album enregistré dans la galerie")}});
+    return}
+  if(d.install!==undefined&&installEvt){installEvt.prompt();installEvt.userChoice.finally(()=>{installEvt=null;render()});return}
+  if(d.vote) return go({name:'ballot',id:d.vote});
+  if(d.voter){view.voter=d.voter;return render()}
+  if(d.ballot){
+    const c=cat(view.id);
+    const tally={};c.photos.forEach(p=>tally[p.id]=0);
+    const allVoted=S.family.every(m=>c.votes[m.id]&&tally[c.votes[m.id]]!==undefined);
+    if(allVoted){c.winner=d.ballot}
+    else{const voter=view.voter&&!c.votes[view.voter]?view.voter:(S.family.find(m=>!c.votes[m.id]||tally[c.votes[m.id]]===undefined)||{}).id;
+      if(voter){c.votes[voter]=d.ballot;view.voter=null}}
+    save();render();
+    if(c.winner&&S.cats.every(x=>!x.photos.length||x.winner||x.photos.length===1))setTimeout(confetti,150);
+    return;
+  }
+  if(d.revote){const c=cat(d.revote);c.votes={};c.winner=null;S.voteCelebrated=false;save();return render()}
+  if(d.addfam!==undefined){S.family.push({id:uid(),name:'Nouveau',color:COLORS[S.family.length%COLORS.length]});save();return render()}
+  if(d.delfam){S.family=S.family.filter(m=>m.id!==d.delfam);S.cats.forEach(c=>delete c.votes[d.delfam]);save();return render()}
+  if(d.addcat!==undefined){S.cats.push({id:uid(),icon:'⭐',name:'Nouvelle catégorie',photos:[],votes:{},winner:null});S.celebrated=false;save();return render()}
+  if(d.delcat){const c=cat(d.delcat);
+    if(c.photos.length&&confirmKey!=='cat'+c.id){confirmKey='cat'+c.id;return render()}
+    c.photos.forEach(p=>delBlob(p.id));S.cats=S.cats.filter(x=>x.id!==c.id);confirmKey=null;save();return render()}
+  if(d.reset!==undefined){
+    if(confirmKey!=='reset'){confirmKey='reset';return render()}
+    clearBlobs();S=freshState(S);save();return go({name:'home'});
+  }
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='gal'){S.gallery=e.target.checked;save();return}
+  if(e.target.id==='cam'&&e.target.files[0]){pendingFile=e.target.files[0];e.target.value='';
+    sheet={type:'who'};render()}
+});
+document.addEventListener('input',e=>{
+  const t=e.target,d=t.dataset;
+  if(t.id==='title') S.title=t.value||'Notre musée';
+  else if(d.fam){member(d.fam).name=t.value}
+  else if(d.ico){cat(d.ico).icon=t.value}
+  else if(d.catname){cat(d.catname).name=t.value}
+  else return;
+  save();
+});
+document.addEventListener('focusout',e=>{if(e.target.dataset&&e.target.dataset.fam&&view.name==='setup')render()});
+render();
+if('serviceWorker' in navigator) addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+})();
+</script>
+</body>
+</html>

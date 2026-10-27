@@ -1,0 +1,16 @@
+{
+  "name": "Album du musée",
+  "short_name": "Album musée",
+  "description": "Album familial de visite de musée : cadres à remplir, étoiles et vote final.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#E4ECEE",
+  "theme_color": "#1E8C93",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
