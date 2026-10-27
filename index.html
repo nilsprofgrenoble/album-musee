@@ -516,11 +516,11 @@ function sheetHTML(){
       <p class="note">Un téléphone envoie, l'autre reçoit. Les photos rejoignent les bons cadres, sans doublon.</p>
       <div class="step"><div class="row"><span class="num">1</span><h3>Sur le téléphone qui envoie</h3></div>
         <button class="btn big coral" data-export ${exportFile?'':'disabled'}>${exportFile?'📤 Envoyer mon album':'Préparation de l’album…'}</button>
-        <span class="note">${nb?`${nb} photo${nb>1?'s':''}`:'La préparation (sans photo)'}. Choisissez ${IOS?'AirDrop, Messages ou WhatsApp':'WhatsApp, Messages ou Bluetooth'}.</span></div>
+        <span class="note">${nb?`${nb} photo${nb>1?'s':''}`:'La préparation (sans photo)'}. ${IOS?'Choisissez AirDrop (le plus simple), Messages ou WhatsApp.':'Le plus simple : Quick Share (Partage à proximité), le fichier arrive directement dans Téléchargements.'}</span></div>
       <div class="step"><div class="row"><span class="num">2</span><h3>Sur le téléphone qui reçoit</h3></div>
         <label class="btn big ghost" style="position:relative">📥 Recevoir un album
           <input type="file" id="importfile" accept=".txt,.json,text/plain,application/json" style="position:absolute;inset:0;opacity:0;width:100%"></label>
-        <span class="note">${IOS?"Choisissez le fichier reçu (AirDrop le range dans Téléchargements ; dans WhatsApp, enregistrez-le d'abord dans Fichiers).":"Choisissez le fichier reçu (dossier Téléchargements). Encore plus simple si l'appli est installée : dans WhatsApp, touchez le fichier, Partager, puis Album musée."}</span></div>
+        <span class="note">${IOS?"Choisissez le fichier reçu (AirDrop le range dans Téléchargements ; dans WhatsApp, enregistrez-le d'abord dans Fichiers).":"Avec Quick Share : touchez ce bouton et choisissez le fichier dans Téléchargements. Avec WhatsApp : ne touchez pas le fichier, faites un appui long dessus, puis l'icône Partager (la flèche) et choisissez Album musée (l'appli doit être installée sur l'écran d'accueil)."}</span></div>
       <button class="btn ghost" data-close>Fermer</button></div></div>`;
   }
   if(sheet.type==='import'){
