@@ -140,9 +140,14 @@ span.vthumb{display:grid;place-items:center;font-size:2.4rem;background:var(--wa
 .howrow span{width:62px;height:62px;display:grid;place-items:center;color:#fff;font-family:var(--display);font-size:1.7rem;background:var(--cobalt);border-radius:50%}
 .howrow div:nth-child(2) span{background:var(--coral);border-radius:12px;transform:rotate(8deg)}
 .howrow div:nth-child(3) span{background:var(--green);border-radius:62% 38% 55% 45% / 45% 55% 45% 55%}.howrow strong{font-size:.85rem}.howrow small{font-size:.72rem;color:var(--ink-soft);font-weight:700;line-height:1.2}
+.modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.modebtn{display:flex;flex-direction:column;gap:2px;text-align:left;padding:10px 12px;border-radius:16px;border:2.5px solid var(--line);background:var(--card);line-height:1.15}
+.modebtn small{font-size:.75rem;color:var(--ink-soft)}
+.modebtn.on{border-color:var(--ink);background:var(--tint-y)}
 /* albums et styles de PDF */
 .albpick,.tplpick{display:flex;flex-direction:column;gap:10px}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;margin:0 -2px;scrollbar-width:none}
+.chips.wrap{flex-wrap:wrap;overflow:visible}
 .chipbtn{flex:none;display:flex;align-items:center;gap:8px;padding:6px 16px 6px 6px;border-radius:999px;border:2.5px solid var(--line);background:var(--card);font-weight:700;text-align:left;line-height:1.1}
 .chipbtn small{display:block;font-weight:400;font-size:.72rem;color:var(--ink-soft)}
 .chipbtn.on{border-color:var(--ink);background:var(--tint-y)}
@@ -215,6 +220,8 @@ span.vthumb{display:grid;place-items:center;font-size:2.4rem;background:var(--wa
 .sheet img.full{width:100%;border-radius:12px;max-height:58vh;object-fit:contain;background:var(--wall-2)}
 .sheet .preview{display:flex;gap:12px;align-items:center}
 .sheet .preview img{width:72px;height:72px;object-fit:cover;border-radius:12px;flex:none}
+.sheetgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.pick.sel{background:var(--tint-y);box-shadow:0 0 0 3px var(--ink)}
 .catpick{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .catpick button{display:flex;flex-direction:column;align-items:center;gap:4px;background:var(--wall);border-radius:16px;padding:12px 8px;font-weight:800;font-size:.85rem;line-height:1.2;text-align:center}
 .catpick button:active{background:var(--wall-2)}
@@ -285,7 +292,7 @@ function freshState(prev){
     title: prev?prev.title:'Musée de Grenoble',
     family: prev?prev.family:[['Papa','🦊'],['Maman','🐻'],['Enfant 1','🐰'],['Enfant 2','🐼']].map(([n,i],k)=>({id:uid(),name:n,icon:i,color:COLORS[k]})),
     cats: (prev?prev.cats.map(c=>[c.icon,c.name]):DEFAULT_CATS).map(([i,n])=>({id:uid(),icon:i,name:n,photos:[],votes:{},winner:null})),
-    celebrated:false, voteCelebrated:false, gallery: prev?prev.gallery!==false:true, setupDone: prev?!!prev.setupDone:false, archive: prev?(prev.archive||[]):[], familyPhoto:null, picks:{}, pdfTpl: prev?(prev.pdfTpl||'decoupe'):'decoupe', hunts: prev?(prev.hunts||{}):{}, onboarded: prev?!!prev.onboarded:false, keepAwake: prev?prev.keepAwake:true, lastBackup: prev?prev.lastBackup:null, backupCount: prev?prev.backupCount:0, lastHunt: prev?prev.lastHunt:null
+    celebrated:false, voteCelebrated:false, gallery: prev?prev.gallery!==false:true, voteMode: prev?(prev.voteMode||'rapide'):'rapide', setupDone: prev?!!prev.setupDone:false, archive: prev?(prev.archive||[]):[], familyPhoto:null, picks:{}, pdfTpl: prev?(prev.pdfTpl||'decoupe'):'decoupe', hunts: prev?(prev.hunts||{}):{}, onboarded: prev?!!prev.onboarded:false, keepAwake: prev?prev.keepAwake:true, lastBackup: prev?prev.lastBackup:null, backupCount: prev?prev.backupCount:0, lastHunt: prev?prev.lastHunt:null
   };
 }
 /* ---------- stockage (mêmes clés que la version précédente) ---------- */
@@ -293,6 +300,7 @@ let S;
 try{S=JSON.parse(localStorage.getItem('albumMusee')||'null')}catch(e){S=null}
 if(!S) S=freshState();
 if(S.gallery===undefined) S.gallery=true;
+if(!S.voteMode) S.voteMode='rapide';
 if(!Array.isArray(S.archive)) S.archive=[];
 if(S.setupDone===undefined) S.setupDone=S.cats.some(c=>c.photos.length);
 S.family.forEach((m,i)=>{if(!m.icon)m.icon=ANIMALS[i%ANIMALS.length]});
@@ -408,7 +416,7 @@ async function mergeAlbum(A){
     let changed=false;
     for(const p of c.photos){if(known.has(p.id))continue;
       try{const b=await (await fetch(p.data)).blob();putBlob(p.id,b);l.photos.push({id:p.id,by:fam[p.by]||p.by,ts:p.ts||Date.now()});known.add(p.id);added++;changed=true}catch(e){}}
-    if(changed){l.photos.sort((a,b)=>a.ts-b.ts);l.votes={};l.skipped={};l.winner=null}
+    if(changed){l.photos.sort((a,b)=>a.ts-b.ts);l.votes={};l.skipped={};l.winner=null;l.closed=false}
   }
   if(A.familyPhoto&&A.familyPhoto.data&&!S.familyPhoto){try{const b=await (await fetch(A.familyPhoto.data)).blob();putBlob(A.familyPhoto.id,b);S.familyPhoto={id:A.familyPhoto.id,ts:A.familyPhoto.ts};added++}catch(e){}}
   if(added)S.voteCelebrated=false;
@@ -866,7 +874,10 @@ function voteView(){
   return `
     <button class="back" data-go="home">← Retour à la visite</button>
     <div><div class="eyebrow">Le grand vote</div><h2>Quelle photo garde-t-on ?</h2></div>
-    <p class="note">Chacun vote en secret, puis on découvre le résultat. On explique pourquoi on a choisi !</p>
+    <div class="modes" role="group" aria-label="Façon de voter">
+      <button class="modebtn ${S.voteMode!=='secret'?'on':''}" data-votemode="rapide" aria-pressed="${S.voteMode!=='secret'}"><strong>Vote rapide</strong><small>tous ensemble, sur le même écran</small></button>
+      <button class="modebtn ${S.voteMode==='secret'?'on':''}" data-votemode="secret" aria-pressed="${S.voteMode==='secret'}"><strong>Vote secret</strong><small>on se passe le téléphone</small></button></div>
+    <p class="note">${S.voteMode==='secret'?'Chacun vote en secret, puis on découvre le résultat.':'Chacun touche son animal, puis sa photo préférée. Les votes se voient tout de suite.'} On explique pourquoi on a choisi !</p>
     <button class="btn ghost small" data-sharesheet>📲 Il manque les photos de l'autre téléphone ?</button>
     ${nx?`<button class="btn big coral" data-vote="${nx.id}">${esc(nx.icon)} Voter : ${esc(nx.name)}</button>`
         :`<button class="btn big" data-go="final">Voir notre album</button>`}
@@ -882,6 +893,22 @@ function ballotView(){
       <p class="note">Une seule photo dans ce cadre : elle gagne d'office.</p>${nextBtn()}`;
   }
   const voter=S.family.find(m=>!valid(c.votes[m.id])&&!(c.skipped||{})[m.id]);
+  const nVotes=S.family.filter(m=>valid(c.votes[m.id])).length;
+  if(S.voteMode!=='secret'&&!c.winner&&!(c.closed&&nVotes)){
+    const sk=c.skipped||{},cur=member(view.rv)&&!valid(c.votes[view.rv])&&!sk[view.rv]?view.rv:(voter?voter.id:null);
+    const chips=S.family.map(m=>{const v=valid(c.votes[m.id]),k=sk[m.id];
+      return `<button class="chipbtn ${m.id===cur?'on':''}" data-rvoter="${m.id}" aria-pressed="${m.id===cur}">${av(m)}<span>${esc(m.name)}<small>${v?'✓ a voté':k?'passe':m.id===cur?'à toi !':'pas encore'}</small></span></button>`}).join('');
+    const tally={};c.photos.forEach(p=>tally[p.id]=[]);S.family.forEach(m=>{if(valid(c.votes[m.id]))tally[c.votes[m.id]].push(m.id)});
+    const cards=c.photos.map(p=>`<button class="vote-card ${cur&&c.votes[cur]===p.id?'lead':''}" data-rballot="${p.id}" aria-label="Voter pour cette photo"><img data-pid="${p.id}" alt=""><span class="tally">${tally[p.id].map(m=>av(member(m))).join('')}</span></button>`).join('');
+    const curM=member(cur);
+    return `<button class="back" data-go="vote">← Le vote</button>
+      <div class="cat-head"><span class="glyph" aria-hidden="true">${esc(c.icon)}</span><h2>${esc(c.name)}</h2></div>
+      <div class="chips wrap">${chips}</div>
+      <p style="margin:0;font-weight:700">${curM?`${esc(curM.icon)} ${esc(curM.name)}, touche ta photo préférée`:'Tout le monde a voté ! On peut encore changer d’avis en touchant un animal.'}</p>
+      <div class="vote-grid">${cards}</div>
+      <button class="btn big ${voter?'ghost':'coral'}" data-rdone ${nVotes?'':'disabled'}>${voter?'Terminer le vote sans les autres':'Voir le résultat'}</button>
+      ${curM?`<button class="btn ghost small" data-rskip="${curM.id}">${esc(curM.name)} ne vote pas</button>`:''}`;
+  }
   if(voter&&!c.winner){
     if(view.ready!==voter.id){
       const n=S.family.filter(m=>valid(c.votes[m.id])||(c.skipped||{})[m.id]).length;
@@ -1145,12 +1172,23 @@ function sheetHTML(){
   if(sheet.type==='photo'){
     const c=cat(sheet.cat),p=c&&c.photos.find(x=>x.id===sheet.id); if(!p) return '';
     const m=member(p.by);
+    if(sheet.mode==='move') return `<div class="sheet" data-backdrop><div>
+      <div class="preview"><img data-pid="${p.id}" alt=""><h2>Dans quel cadre ?</h2></div>
+      <div class="catpick">${S.cats.filter(x=>x.id!==c.id).map(x=>`<button data-movecat="${x.id}"><span class="glyph" aria-hidden="true">${esc(x.icon)}</span>${esc(x.name)}
+        <span class="n">${x.photos.length?x.photos.length+' photo'+(x.photos.length>1?'s':''):'vide'}</span></button>`).join('')}</div>
+      <button class="btn ghost" data-photomode="">← Retour</button></div></div>`;
+    if(sheet.mode==='who') return `<div class="sheet" data-backdrop><div>
+      <div class="preview"><img data-pid="${p.id}" alt=""><h2>Qui l'a trouvée ?</h2></div>
+      <div class="row" style="justify-content:center">${S.family.map(f=>`<button class="pick ${f.id===p.by?'sel':''}" data-setwho="${f.id}" aria-pressed="${f.id===p.by}">${av(f,'lg')}${esc(f.name)}</button>`).join('')}</div>
+      <button class="btn ghost" data-photomode="">← Retour</button></div></div>`;
     return `<div class="sheet" data-backdrop><div>
       <img class="full" data-pid="${p.id}" alt="">
       <div class="row">${av(m)}<span>Trouvée par <strong>${esc(m?.name||'?')}</strong></span></div>
-      <div class="row"><button class="btn" data-close>Fermer</button>
-        <button class="btn ghost" data-savephoto="${p.id}">Dans la galerie</button>
-        <button class="btn ghost" data-delphoto="${p.id}">${confirmKey==='ph'+p.id?'Sûr ? Retirer':'Retirer'}</button></div></div></div>`;
+      <div class="sheetgrid"><button class="btn ghost small" data-photomode="move">↪ Autre cadre</button>
+        <button class="btn ghost small" data-photomode="who">Changer qui l'a trouvée</button>
+        <button class="btn ghost small" data-savephoto="${p.id}">Dans la galerie</button>
+        <button class="btn ghost small" data-delphoto="${p.id}">${confirmKey==='ph'+p.id?'Sûr ? Retirer':'Retirer'}</button></div>
+      <button class="btn" data-close>Fermer</button></div></div>`;
   }
   if(sheet.type==='repick'){const M=modelFor(view.name==='visit'?view.id:'',view.owner||''),c=M.cats.find(x=>x.key===sheet.key);if(!c||!M.ownerM)return '';
     return `<div class="sheet" data-backdrop><div><div class="cat-head"><span class="glyph" aria-hidden="true">${esc(c.icon)}</span><h2>${esc(c.name)}</h2></div>
@@ -1268,9 +1306,17 @@ document.addEventListener('click',e=>{
   if(d.open) return go({name:'cat',id:d.open});
   if(d.photo){sheet={type:'photo',cat:view.id,id:d.photo};confirmKey=null;return render()}
   if(d.close!==undefined){sheet=null;confirmKey=null;return render()}
+  if(d.photomode!==undefined){sheet.mode=d.photomode||undefined;confirmKey=null;return render()}
+  if(d.movecat){const c=cat(sheet.cat),t=cat(d.movecat),p=c&&c.photos.find(x=>x.id===sheet.id);if(!p||!t)return;
+    const wasEmpty=!t.photos.length,wasComplete=complete();
+    c.photos=c.photos.filter(x=>x.id!==p.id);t.photos.push(p);t.photos.sort((a,b)=>a.ts-b.ts);
+    [c,t].forEach(x=>{x.votes={};x.skipped={};x.winner=null;x.closed=false});S.voteCelebrated=false;if(!complete())S.celebrated=false;
+    if(!wasComplete&&complete()&&!S.celebrated){S.celebrated=true;setTimeout(confetti,300)}
+    save();sheet=null;toast(`Déplacée dans ${t.icon}${wasEmpty?' : nouvelle étoile !':''}`);return render()}
+  if(d.setwho){const c=cat(sheet.cat),p=c&&c.photos.find(x=>x.id===sheet.id);if(p){p.by=d.setwho;save();toast(`Trouvée par ${member(d.setwho).name}`)}sheet.mode=undefined;return render()}
   if(d.delphoto){
     if(confirmKey!=='ph'+d.delphoto){confirmKey='ph'+d.delphoto;return render()}
-    const c=cat(view.id);c.photos=c.photos.filter(p=>p.id!==d.delphoto);c.votes={};c.winner=null;delBlob(d.delphoto);
+    const c=cat(view.id);c.photos=c.photos.filter(p=>p.id!==d.delphoto);c.votes={};c.skipped={};c.winner=null;c.closed=false;delBlob(d.delphoto);
     S.voteCelebrated=false;if(!complete())S.celebrated=false;save();sheet=null;confirmKey=null;return render();
   }
   if(d.savephoto){const id=d.savephoto;getBlob(id).then(b=>{if(b)toGallery([b],`${slug(S.title)}-${stamp()}`)});return}
@@ -1284,7 +1330,7 @@ document.addEventListener('click',e=>{
     endCapture();
     S.lastActive=Date.now();
     if(view.name!=='cat'&&view.name!=='home')view={name:'home'};
-    const id=uid();c.photos.push({id,by:d.who,ts:Date.now()});c.votes={};c.winner=null;S.voteCelebrated=false;save();
+    const id=uid();c.photos.push({id,by:d.who,ts:Date.now()});c.votes={};c.skipped={};c.winner=null;c.closed=false;S.voteCelebrated=false;save();
     compress(f).then(b=>{putBlob(id,b);render()});
     if(!wasFilled) popId=c.id;
     toast(wasFilled?`Rangée dans ${c.icon}`:`Nouvelle étoile ! ${c.icon}`);
@@ -1344,11 +1390,20 @@ document.addEventListener('click',e=>{
     mergeAlbum(A).then(n=>{sheet=null;toast(n?`${n} photo${n>1?'s':''} ajoutée${n>1?'s':''} !`:'Préparation reprise');go({name:'home'})});return}
   if(d.vote) return go({name:'ballot',id:d.vote});
   if(d.ready){view.ready=d.ready;return render()}
+  if(d.votemode){S.voteMode=d.votemode;save();return render()}
+  if(d.rvoter){view.rv=d.rvoter;const c=cat(view.id);if(c&&c.skipped)delete c.skipped[d.rvoter];save();return render()}
+  if(d.rballot||d.rskip){const c=cat(view.id),sk=c.skipped=c.skipped||{},valid=id=>c.photos.some(p=>p.id===id);
+    const who=d.rskip||(member(view.rv)&&!sk[view.rv]?view.rv:(S.family.find(m=>!valid(c.votes[m.id])&&!sk[m.id])||{}).id);if(!who)return;
+    if(d.rskip){delete c.votes[who];sk[who]=1}else{c.votes[who]=d.rballot;delete sk[who]}
+    const i=S.family.findIndex(m=>m.id===who),order=[...S.family.slice(i+1),...S.family.slice(0,i)];
+    view.rv=(order.find(m=>!valid(c.votes[m.id])&&!sk[m.id])||{}).id||null;save();return render()}
+  if(d.rdone!==undefined){const c=cat(view.id),sk=c.skipped=c.skipped||{},valid=id=>c.photos.some(p=>p.id===id);
+    S.family.forEach(m=>{if(!valid(c.votes[m.id]))sk[m.id]=1});c.closed=true;view.rv=null;save();window.scrollTo(0,0);return render()}
   if(d.ballot){const c=cat(view.id),v=S.family.find(m=>!c.photos.some(p=>p.id===c.votes[m.id])&&!(c.skipped||{})[m.id]);
     if(v){c.votes[v.id]=d.ballot;save()} view.ready=null;window.scrollTo(0,0);return render()}
   if(d.skip){const c=cat(view.id);delete c.votes[d.skip];c.skipped=Object.assign(c.skipped||{},{[d.skip]:1});save();view.ready=null;return render()}
   if(d.pickwin){const c=cat(view.id);c.winner=d.pickwin;save();setTimeout(confetti,150);return render()}
-  if(d.revote){const c=cat(d.revote);c.votes={};c.skipped={};c.winner=null;S.voteCelebrated=false;save();view.ready=null;return render()}
+  if(d.revote){const c=cat(d.revote);c.votes={};c.skipped={};c.winner=null;c.closed=false;view.rv=null;S.voteCelebrated=false;save();view.ready=null;return render()}
   if(d.make){const key=exportKey(d.make,d.v);busy=key;ready=null;render();
     buildFiles(d.make,d.v,view.owner||'').then(files=>{busy=null;ready=files.length?{key,files}:null;if(!files.length)toast('Aucune photo à enregistrer');render()})
       .catch(()=>{busy=null;toast('La préparation a échoué, réessayez');render()});return}
