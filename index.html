@@ -12,7 +12,7 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Album du musée</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Gochi+Hand&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap">
 <style>
 /* Mur de musée clair : chaque catégorie est un cadre doré dont le pictogramme reste toujours visible.
    Un gros bouton photo en bas de l'écran ; on range la photo après l'avoir prise. */
@@ -140,6 +140,30 @@ span.vthumb{display:grid;place-items:center;font-size:2.4rem;background:var(--wa
 .howrow span{width:62px;height:62px;display:grid;place-items:center;color:#fff;font-family:var(--display);font-size:1.7rem;background:var(--cobalt);border-radius:50%}
 .howrow div:nth-child(2) span{background:var(--coral);border-radius:12px;transform:rotate(8deg)}
 .howrow div:nth-child(3) span{background:var(--green);border-radius:62% 38% 55% 45% / 45% 55% 45% 55%}.howrow strong{font-size:.85rem}.howrow small{font-size:.72rem;color:var(--ink-soft);font-weight:700;line-height:1.2}
+/* albums et styles de PDF */
+.albpick,.tplpick{display:flex;flex-direction:column;gap:10px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;margin:0 -2px;scrollbar-width:none}
+.chipbtn{flex:none;display:flex;align-items:center;gap:8px;padding:6px 16px 6px 6px;border-radius:999px;border:2.5px solid var(--line);background:var(--card);font-weight:700;text-align:left;line-height:1.1}
+.chipbtn small{display:block;font-weight:400;font-size:.72rem;color:var(--ink-soft)}
+.chipbtn.on{border-color:var(--ink);background:var(--tint-y)}
+.chipbtn .av{color:#fff;font-family:var(--display)}
+.frame .chg{position:absolute;top:-8px;right:-8px;background:var(--ink);color:#fff;border-radius:999px;padding:4px 10px;font-size:.72rem;font-weight:700}
+.tpls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tpl{display:flex;flex-direction:column;gap:6px;align-items:center;font-size:.8rem;font-weight:700;text-align:center;padding:8px 6px;border-radius:16px;border:2.5px solid transparent;line-height:1.15}
+.tpl.on{border-color:var(--ink);background:var(--wall-2)}
+.tplprev{position:relative;display:block;width:100%;aspect-ratio:3/4;border-radius:6px;overflow:hidden;box-shadow:0 2px 8px rgba(20,24,58,.18)}
+.tplprev i,.tplprev b{position:absolute;display:block}
+.tpl-decoupe .tplprev{background:#fff}
+.tpl-decoupe .tplprev i{left:0;right:0;top:0;height:46%;background:#2340C8}
+.tpl-decoupe .tplprev b{left:20%;top:30%;width:60%;height:44%;background:linear-gradient(#8FA7B5,#8FA7B5) 50%/72% 72% no-repeat #F7C31C;border-radius:14px 14px 14px 4px;transform:rotate(-4deg)}
+.tpl-cartel{font-family:"Libre Baskerville",Georgia,serif;font-weight:400}
+.tpl-cartel .tplprev{background:#F1F1EE}
+.tpl-cartel .tplprev i{left:16%;top:14%;width:68%;height:50%;background:linear-gradient(#8FA7B5,#8FA7B5) 50%/66% 64% no-repeat #fff;border:4px solid #1E1E1E;box-sizing:border-box}
+.tpl-cartel .tplprev b{right:12%;bottom:13%;width:40%;height:12%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.tpl-carnet{font-family:"Gochi Hand","Comic Sans MS",cursive;font-size:1rem;font-weight:400}
+.tpl-carnet .tplprev{background:#fff radial-gradient(#C5CCC8 1px,transparent 1.4px) 0 0/9px 9px}
+.tpl-carnet .tplprev i{left:16%;top:18%;width:68%;height:58%;background:linear-gradient(#8FA7B5,#8FA7B5) 50% 18%/82% 64% no-repeat #fff;box-shadow:0 2px 6px rgba(0,0,0,.25);transform:rotate(-5deg)}
+.tpl-carnet .tplprev b{left:38%;top:12%;width:32%;height:9%;background:rgba(233,118,43,.5);transform:rotate(6deg)}
 /* barre d'onglets */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:15;display:grid;grid-template-columns:repeat(5,1fr);align-items:end;
   background:var(--card);border-top:3px solid var(--ink);
@@ -211,7 +235,7 @@ span.vthumb{display:grid;place-items:center;font-size:2.4rem;background:var(--wa
 .vote-card .tally{position:absolute;right:6px;bottom:6px;left:6px;display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end}
 .vote-card.lead{box-shadow:0 0 0 5px var(--gold-2)}
 .vote-card.lose{opacity:.45}
-.vote-card .crown{position:absolute;top:6px;left:6px;font-size:2rem}
+.vote-card .crown{position:absolute;top:6px;left:6px;font-size:2rem;font-weight:700;color:var(--ink);background:var(--yellow);border-radius:50%;width:44px;height:44px;display:grid;place-items:center;line-height:1}
 .list{display:flex;flex-direction:column;gap:10px}
 .item{display:flex;align-items:center;gap:12px;background:var(--wall-2);border-radius:18px;padding:12px 14px;text-align:left;width:100%}
 .item .glyph{width:46px;height:46px;border-radius:50%;background:var(--card);display:grid;place-items:center;font-size:1.6rem;flex:none}
@@ -261,7 +285,7 @@ function freshState(prev){
     title: prev?prev.title:'Musée de Grenoble',
     family: prev?prev.family:[['Papa','🦊'],['Maman','🐻'],['Enfant 1','🐰'],['Enfant 2','🐼']].map(([n,i],k)=>({id:uid(),name:n,icon:i,color:COLORS[k]})),
     cats: (prev?prev.cats.map(c=>[c.icon,c.name]):DEFAULT_CATS).map(([i,n])=>({id:uid(),icon:i,name:n,photos:[],votes:{},winner:null})),
-    celebrated:false, voteCelebrated:false, gallery: prev?prev.gallery!==false:true, setupDone: prev?!!prev.setupDone:false, archive: prev?(prev.archive||[]):[], familyPhoto:null, hunts: prev?(prev.hunts||{}):{}, onboarded: prev?!!prev.onboarded:false, keepAwake: prev?prev.keepAwake:true, lastBackup: prev?prev.lastBackup:null, backupCount: prev?prev.backupCount:0, lastHunt: prev?prev.lastHunt:null
+    celebrated:false, voteCelebrated:false, gallery: prev?prev.gallery!==false:true, setupDone: prev?!!prev.setupDone:false, archive: prev?(prev.archive||[]):[], familyPhoto:null, picks:{}, pdfTpl: prev?(prev.pdfTpl||'decoupe'):'decoupe', hunts: prev?(prev.hunts||{}):{}, onboarded: prev?!!prev.onboarded:false, keepAwake: prev?prev.keepAwake:true, lastBackup: prev?prev.lastBackup:null, backupCount: prev?prev.backupCount:0, lastHunt: prev?prev.lastHunt:null
   };
 }
 /* ---------- stockage (mêmes clés que la version précédente) ---------- */
@@ -328,8 +352,8 @@ async function albumImage(M){
   const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
   x.fillStyle='#FFFFFF';x.fillRect(0,0,W,H);
   try{await document.fonts.ready}catch(e){}
-  x.fillStyle='#4A5068';x.font='700 26px "Atkinson Hyperlegible",sans-serif';x.fillText(fdate(M.date).toUpperCase(),pad,80);
-  x.fillStyle='#14183A';x.font='64px "Lilita One",sans-serif';x.fillText(M.title,pad,150);
+  x.fillStyle='#4A5068';x.font='700 26px "Atkinson Hyperlegible",sans-serif';x.fillText((M.ownerM?M.title.toUpperCase()+' · ':'')+fdate(M.date).toUpperCase(),pad,80,W-2*pad);
+  x.fillStyle='#14183A';x.font='64px "Lilita One",sans-serif';x.fillText(M.ownerM?`L'album de ${M.ownerM.name}`:M.title,pad,150,W-2*pad);
   x.fillStyle='#2340C8';x.font='700 30px "Atkinson Hyperlegible",sans-serif';x.fillText('★'.repeat(M.stars)+(M.stars===M.total?'  Album complet !':''),pad,200);
   for(let i=0;i<cats.length;i++){
     const ct=cats[i],p=ct.photo;
@@ -402,79 +426,252 @@ const winnerOf=c=>c.photos.find(p=>p.id===c.winner)||(c.photos.length===1?c.phot
 const decided=c=>!c.photos.length||!!winnerOf(c);
 const coverOf=c=>winnerOf(c)||c.photos[c.photos.length-1];
 const nextUndecided=()=>S.cats.find(c=>!decided(c));
-function currentModel(){const all=S.cats.flatMap(c=>c.photos);
-  return {id:'',title:S.title,familyPhoto:S.familyPhoto||null,date:all.length?Math.min(...all.map(p=>p.ts)):Date.now(),family:S.family,stars:filled(),total:S.cats.length,
-    cats:S.cats.map(c=>({icon:c.icon,name:c.name,photos:c.photos,photo:winnerOf(c)}))}}
-function visitModel(v){return {id:v.id,title:v.title,familyPhoto:v.familyPhoto||null,date:v.date,family:v.family,stars:v.stars,total:v.total,
-    cats:v.cats.map(c=>({icon:c.icon,name:c.name,photos:c.photos,photo:c.photos.find(p=>p.id===c.winner)||c.photos[c.photos.length-1]||null}))}}
+/* L'album d'un membre : sa photo choisie à la main, sinon son vote, sinon sa dernière trouvaille, sinon la gagnante de la famille */
+function pickFor(c,mid,picks){const ok=id=>id&&c.photos.find(p=>p.id===id);
+  return ok(picks&&picks[c.id])||ok(c.votes&&c.votes[mid])||[...c.photos].reverse().find(p=>p.by===mid)||winnerOf(c)||c.photos[c.photos.length-1]||null}
+function currentModel(owner){const all=S.cats.flatMap(c=>c.photos),om=owner?member(owner):null,picks=om?((S.picks||{})[owner]||{}):null;
+  return {id:'',title:S.title,owner:om?owner:'',ownerM:om||null,familyPhoto:S.familyPhoto||null,date:all.length?Math.min(...all.map(p=>p.ts)):Date.now(),family:S.family,stars:filled(),total:S.cats.length,
+    cats:S.cats.map(c=>{const win=winnerOf(c)||c.photos[c.photos.length-1]||null;return {key:c.id,icon:c.icon,name:c.name,photos:c.photos,photo:om?pickFor(c,owner,picks):winnerOf(c),famWin:win}})}}
+function visitModel(v,owner){const om=owner?v.family.find(m=>m.id===owner):null;
+  return {id:v.id,title:v.title,owner:om?owner:'',ownerM:om||null,familyPhoto:v.familyPhoto||null,date:v.date,family:v.family,stars:v.stars,total:v.total,
+    cats:v.cats.map((c,i)=>{const ok=id=>id&&c.photos.find(p=>p.id===id),win=ok(c.winner)||c.photos[c.photos.length-1]||null;
+      const ph=om?(ok((c.picks||{})[owner])||[...c.photos].reverse().find(p=>p.by===owner)||win):win;
+      return {key:String(i),icon:c.icon,name:c.name,photos:c.photos,photo:ph,famWin:win}})}}
 function archiveCurrent(){
   const all=S.cats.flatMap(c=>c.photos); if(!all.length){if(S.familyPhoto)delBlob(S.familyPhoto.id);return false}
   S.archive.unshift({id:uid(),title:S.title,familyPhoto:S.familyPhoto||null,date:Math.min(...all.map(p=>p.ts)),stars:filled(),total:S.cats.length,
     family:S.family.map(m=>({id:m.id,name:m.name,icon:m.icon,color:m.color})),
-    cats:S.cats.filter(c=>c.photos.length).map(c=>({icon:c.icon,name:c.name,photos:c.photos.map(p=>({id:p.id,by:p.by,ts:p.ts})),winner:(winnerOf(c)||coverOf(c)).id}))});
+    cats:S.cats.filter(c=>c.photos.length).map(c=>({icon:c.icon,name:c.name,photos:c.photos.map(p=>({id:p.id,by:p.by,ts:p.ts})),winner:(winnerOf(c)||coverOf(c)).id,picks:Object.fromEntries(S.family.map(m=>[m.id,(pickFor(c,m.id,(S.picks||{})[m.id])||{}).id]))}))});
   return true;
 }
-/* ---------- PDF : chaque page est dessinée sur un canvas puis insérée en JPEG ---------- */
+/* ---------- PDF : trois styles ; chaque page est dessinée sur un canvas puis insérée en JPEG ---------- */
 const PW=1240,PH=1754;
-function newPage(){const c=document.createElement('canvas');c.width=PW;c.height=PH;const x=c.getContext('2d');x.fillStyle='#FFFFFF';x.fillRect(0,0,PW,PH);return [c,x]}
+const PDF_TPL={decoupe:'Papiers découpés',cartel:'Cartel de musée',carnet:"Carnet d'explorateur"};
+const PAPER=['#F7C31C','#EE4B2B','#2340C8','#1F8A57'];
+const BLOB='M88 6c18 20 6 40 24 52s40-4 44 18-26 24-22 46 32 26 18 46-40 0-56 14-14 22-30 18c-10-28 10-46-4-66S18 120 26 96s40-18 40-42S70 22 88 6z';
+const F={lil:'"Lilita One","Arial Rounded MT Bold",sans-serif',atk:'"Atkinson Hyperlegible",sans-serif',hand:'"Gochi Hand","Comic Sans MS",cursive',
+  serif:'"Libre Baskerville",Georgia,serif',emo:'"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'};
+function newPage(bg){const c=document.createElement('canvas');c.width=PW;c.height=PH;const x=c.getContext('2d');x.fillStyle=bg||'#FFFFFF';x.fillRect(0,0,PW,PH);return [c,x]}
 async function bitmap(id){const b=id&&await getBlob(id);if(!b)return null;try{return await createImageBitmap(b)}catch(e){return null}}
-function framed(x,im,bx,by,bw,bh){ // photo entière (sans recadrage) dans un cadre doré
-  const k=Math.min(bw/im.width,bh/im.height),w=im.width*k,h=im.height*k,X=bx+(bw-w)/2,Y=by+(bh-h)/2;
-  x.fillStyle='#F7C31C';x.fillRect(X-26,Y-26,w+52,h+52);x.fillStyle='#2340C8';x.fillRect(X-16,Y-16,w+32,h+32);
-  x.fillStyle='#FFFFFF';x.fillRect(X-8,Y-8,w+16,h+16);x.drawImage(im,X,Y,w,h);return Y+h+26;
-}
 function cover(x,im,X,Y,w,h){const k=Math.max(w/im.width,h/im.height),dw=im.width*k,dh=im.height*k;
   x.save();x.beginPath();x.rect(X,Y,w,h);x.clip();x.drawImage(im,X+(w-dw)/2,Y+(h-dh)/2,dw,dh);x.restore()}
 function wrap(x,text,X,Y,maxW,lh,maxLines){const words=String(text).split(' ');let line='',n=0;
   for(const w of words){const t=line?line+' '+w:w;
     if(x.measureText(t).width>maxW&&line){if(n===maxLines-1){line+='…';break}x.fillText(line,X,Y+n*lh);n++;line=w}else line=t}
   if(line){x.fillText(line,X,Y+n*lh,maxW);n++}return Y+(n-1)*lh+lh}
-function footer(x,M,n,tot){x.fillStyle='#4A5068';x.font='700 24px "Atkinson Hyperlegible",sans-serif';x.textAlign='left';x.fillText(M.title,80,PH-60,PW-300);
-  x.textAlign='right';x.fillText(`${n} / ${tot}`,PW-80,PH-60);x.textAlign='left'}
-async function pdfPages(M){
-  try{await document.fonts.ready}catch(e){}
-  const cats=M.cats.filter(c=>c.photo),pages=[],tot=cats.length+2;
-  {const [c,x]=newPage();
-   x.fillStyle='#4A5068';x.font='700 30px "Atkinson Hyperlegible",sans-serif';x.fillText(fdate(M.date).toUpperCase(),100,150);
-   x.fillStyle='#14183A';x.font='96px "Lilita One",sans-serif';let y=wrap(x,M.title,100,250,PW-200,100,2);
-   const fp=await bitmap(M.familyPhoto&&M.familyPhoto.id);
-   if(fp) y=framed(x,fp,130,y+20,PW-260,900);
-   else{x.fillStyle='#EEF1FB';x.fillRect(130,y+20,PW-260,700);x.font='200px sans-serif';x.textAlign='center';x.fillText('🖼️',PW/2,y+450);x.textAlign='left';y+=760}
-   y+=60;x.font='700 46px "Atkinson Hyperlegible",sans-serif';x.fillStyle='#14183A';
-   x.fillText(M.family.map(m=>`${m.icon} ${m.name}`).join('   '),100,y,PW-200);
-   y+=90;x.fillStyle='#2340C8';x.font='700 64px sans-serif';x.fillText('★'.repeat(M.stars)+'☆'.repeat(Math.max(0,M.total-M.stars)),100,y,PW-200);
-   x.fillStyle='#4A5068';x.font='700 32px "Atkinson Hyperlegible",sans-serif';x.fillText(M.stars===M.total?'Album complet !':`${M.stars} cadres remplis sur ${M.total}`,100,y+60);
-   footer(x,M,1,tot);pages.push(c)}
-  for(let i=0;i<cats.length;i++){const ct=cats[i],[c,x]=newPage();
-    x.font='110px sans-serif';x.fillText(ct.icon,90,215);
-    x.fillStyle='#14183A';x.font='70px "Lilita One",sans-serif';const y0=wrap(x,ct.name,250,175,PW-340,76,2);
-    const others=ct.photos.filter(p=>p.id!==ct.photo.id);
-    const boxH=others.length?880:1150;
-    const im=await bitmap(ct.photo.id);let y=Math.max(y0,260)+30;
-    if(im) y=framed(x,im,130,y+26,PW-260,boxH);
-    const m=M.family.find(f=>f.id===ct.photo.by);
-    x.fillStyle='#14183A';x.font='700 40px "Atkinson Hyperlegible",sans-serif';x.fillText(`👑 La photo choisie${m?` · trouvée par ${m.icon} ${m.name}`:''}`,100,y+50,PW-200);
-    if(others.length){y+=120;x.fillStyle='#4A5068';x.font='700 28px "Atkinson Hyperlegible",sans-serif';x.fillText('LES AUTRES CANDIDATES',100,y);y+=24;
-      const n=Math.min(others.length,8),cols=4,g=24,w=(PW-200-g*(cols-1))/cols;
-      for(let k=0;k<n;k++){const p=others[k],X=100+(k%cols)*(w+g),Y=y+Math.floor(k/cols)*(w+g),b=await bitmap(p.id);
-        if(Y+w>PH-100)break;
-        x.fillStyle='#EEF1FB';x.fillRect(X,Y,w,w);if(b)cover(x,b,X,Y,w,w);
-        const mm=M.family.find(f=>f.id===p.by);if(mm){x.fillStyle=mm.color;x.beginPath();x.arc(X+40,Y+w-40,30,0,7);x.fill();x.font='34px sans-serif';x.textAlign='center';x.fillText(mm.icon,X+40,Y+w-28);x.textAlign='left'}}}
-    footer(x,M,i+2,tot);pages.push(c)}
-  {const [c,x]=newPage();x.fillStyle='#14183A';x.font='76px "Lilita One",sans-serif';x.fillText('Qui a trouvé',100,200);x.fillText('les photos gagnantes',100,280);
-   const wins={};M.family.forEach(m=>wins[m.id]=[]);cats.forEach(ct=>{if(wins[ct.photo.by])wins[ct.photo.by].push(ct.icon)});
-   let y=400;for(const m of M.family.slice().sort((a,b)=>wins[b.id].length-wins[a.id].length)){
-     x.fillStyle='#FFFFFF';x.fillRect(100,y,PW-200,150);x.fillStyle=m.color;x.beginPath();x.arc(185,y+75,52,0,7);x.fill();
-     x.font='60px sans-serif';x.textAlign='center';x.fillText(m.icon,185,y+96);x.textAlign='left';
-     x.fillStyle='#14183A';x.font='700 48px "Atkinson Hyperlegible",sans-serif';x.fillText(m.name,270,y+70,420);
-     x.font='44px sans-serif';x.fillText(wins[m.id].join(' ')||' ',270,y+125,PW-560);
-     x.fillStyle='#2340C8';x.font='700 50px sans-serif';x.textAlign='right';x.fillText('★'.repeat(wins[m.id].length),PW-130,y+92);x.textAlign='left';
-     y+=180;if(y>PH-250)break}
-   footer(x,M,tot,tot);pages.push(c)}
+function fit(im,w,h){const k=Math.min(w/im.width,h/im.height);return [im.width*k,im.height*k]}
+function rr(x,X,Y,w,h,r){r=(typeof r==='number'?[r,r,r,r]:r).map(v=>Math.max(0,Math.min(v,w/2,h/2)));
+  x.beginPath();x.moveTo(X+r[0],Y);x.lineTo(X+w-r[1],Y);x.quadraticCurveTo(X+w,Y,X+w,Y+r[1]);x.lineTo(X+w,Y+h-r[2]);x.quadraticCurveTo(X+w,Y+h,X+w-r[2],Y+h);
+  x.lineTo(X+r[3],Y+h);x.quadraticCurveTo(X,Y+h,X,Y+h-r[3]);x.lineTo(X,Y+r[0]);x.quadraticCurveTo(X,Y,X+r[0],Y);x.closePath()}
+function T(x,t,X,Y,font,color,align,maxW){x.save();x.font=font;x.fillStyle=color;x.textAlign=align||'left';if(maxW)x.fillText(t,X,Y,maxW);else x.fillText(t,X,Y);x.restore()}
+function emoji(x,e,cx,cy,size){x.save();x.font=`${size}px ${F.emo}`;x.textAlign='center';x.textBaseline='middle';x.fillStyle='#000';x.fillText(e,cx,cy);x.restore()}
+function disc(x,cx,cy,r,fill){x.fillStyle=fill;x.beginPath();x.arc(cx,cy,r,0,Math.PI*2);x.fill()}
+function avatarDisc(x,m,cx,cy,r){disc(x,cx,cy,r+Math.max(3,r*.12),'#FFFFFF');disc(x,cx,cy,r,m.color||'#2340C8');emoji(x,m.icon||'🙂',cx,cy+r*.06,r*1.15)}
+function starShape(x,cx,cy,R,fill,stroke,lw,ang){x.save();x.translate(cx,cy);x.rotate(ang||0);x.beginPath();
+  for(let i=0;i<10;i++){const r=i%2?R*.45:R,a=i*Math.PI/5-Math.PI/2;x.lineTo(Math.cos(a)*r,Math.sin(a)*r)}x.closePath();
+  if(fill){x.fillStyle=fill;x.fill()}if(stroke){x.strokeStyle=stroke;x.lineWidth=lw||3;x.lineJoin='round';x.stroke()}x.restore()}
+const spaced=t=>t.split('').join(' ');
+const joinNames=a=>a.length<2?(a[0]||''):a.slice(0,-1).join(', ')+' et '+a[a.length-1];
+function pdfInfo(M){const cats=[];M.cats.forEach((c,i)=>{if(c.photo)cats.push(Object.assign({n:i+1},c))});
+  const om=M.ownerM||null;
+  const found=om?M.cats.flatMap(c=>c.photos.filter(p=>p.by===om.id).map(p=>Object.assign({icon:c.icon},p))):[];
+  const wins={};M.family.forEach(m=>wins[m.id]=[]);cats.forEach(c=>{const w=om?c.famWin:c.photo;if(w&&wins[w.by])wins[w.by].push(c.icon)});
+  const inFam=om?M.cats.filter(c=>c.famWin&&c.famWin.by===om.id).length:0;
+  return {cats,om,found,wins,inFam,date:fdate(M.date),year:new Date(M.date).getFullYear(),fam:id=>M.family.find(f=>f.id===id)}}
+function choiceLine(I,c){const n=c.photos.length;if(n<2)return 'La seule photo de ce cadre';
+  if(!I.om)return `Choisie au vote parmi ${n} photos`;
+  return c.famWin&&c.famWin.id===c.photo.id?`Le choix de ${I.om.name}, et aussi celui de la famille`:`Le choix de ${I.om.name} parmi ${n} photos`}
+
+/* — Style 1 : papiers découpés (les couleurs de l'appli) — */
+const R_DECOUPE={
+  foot(x,M,n,tot){T(x,M.title,80,PH-48,'700 22px '+F.atk,'#4A5068',null,PW-300);T(x,`${n} / ${tot}`,PW-80,PH-48,'700 22px '+F.atk,'#4A5068','right')},
+  async front(M,I,tot){const [cv,x]=newPage('#FFFFFF'),om=I.om;
+    x.fillStyle='#2340C8';x.fillRect(0,0,PW,940);
+    x.save();x.translate(780,-130);x.scale(3.4,3.4);x.fillStyle='#F7C31C';x.fill(new Path2D(BLOB));x.restore();
+    disc(x,170,930,150,'#EE4B2B');
+    x.save();x.translate(1120,900);x.rotate(-.5);x.fillStyle='#1F8A57';x.beginPath();x.ellipse(0,0,150,68,0,0,Math.PI*2);x.fill();x.restore();
+    T(x,I.date.toUpperCase(),100,140,'700 30px '+F.atk,'#FFFFFF');
+    let y;
+    if(om){T(x,"L'album de",100,240,'54px '+F.lil,'#FFFFFF');x.font='150px '+F.lil;x.fillStyle='#FFFFFF';y=wrap(x,om.name,100,390,640,145,2);
+      T(x,M.title,100,y-40,'700 38px '+F.atk,'#FFFFFF',null,640);avatarDisc(x,om,990,330,110)}
+    else{x.font='120px '+F.lil;x.fillStyle='#FFFFFF';y=wrap(x,M.title,100,290,700,118,3);T(x,'Notre album de famille',100,y-30,'700 38px '+F.atk,'#FFFFFF')}
+    const fp=await bitmap(M.familyPhoto&&M.familyPhoto.id);
+    x.save();x.translate(PW/2,1065);x.rotate(-.025);
+    if(fp){const [w,h]=fit(fp,780,540);rr(x,-w/2-34,-h/2-34,w+68,h+68,[44,44,44,12]);x.fillStyle='#F7C31C';x.fill();
+      x.save();rr(x,-w/2,-h/2,w,h,22);x.clip();x.drawImage(fp,-w/2,-h/2,w,h);x.restore()}
+    else{rr(x,-380,-250,760,500,[44,44,44,12]);x.fillStyle='#F7C31C';x.fill();rr(x,-346,-216,692,432,22);x.fillStyle='#FFF3CC';x.fill();emoji(x,'🏛️',0,0,200)}
+    x.restore();
+    const n=M.family.length,step=Math.min(230,(PW-160)/Math.max(1,n)),x0=PW/2-step*(n-1)/2;
+    M.family.forEach((m,k)=>{avatarDisc(x,m,x0+k*step,1460,48);T(x,m.name,x0+k*step,1548,'700 30px '+F.atk,'#14183A','center',step-16)});
+    const sR=28,sStep=Math.min(76,(PW-200)/Math.max(1,M.total)),s0=PW/2-sStep*(M.total-1)/2;
+    for(let k=0;k<M.total;k++)starShape(x,s0+k*sStep,1630,sR,k<M.stars?'#F7C31C':null,k<M.stars?'#14183A':'#CDD3EA',4,k%2?.15:-.12);
+    this.foot(x,M,1,tot);return cv},
+  async page(M,I,c,i,tot){const [cv,x]=newPage('#FFFFFF'),col=PAPER[i%4];
+    x.save();x.translate(150,175);x.rotate(-.3);x.fillStyle=col;x.beginPath();x.ellipse(0,0,135,112,0,0,Math.PI*2);x.fill();x.restore();
+    disc(x,150,175,80,'#FFFFFF');emoji(x,c.icon,150,180,96);
+    T(x,'N° '+c.n,300,140,'700 30px '+F.atk,'#B8361D');
+    x.font='78px '+F.lil;x.fillStyle='#14183A';const yT=wrap(x,c.name,300,222,PW-390,80,2);
+    const others=I.om?[]:c.photos.filter(p=>p.id!==c.photo.id),top=Math.max(yT,300)+30,H=others.length?Math.min(800,1170-top):Math.min(1060,1420-top);
+    const im=await bitmap(c.photo.id);let bottom=top+H-60;
+    if(im){const [w,h]=fit(im,PW-320,H-80),cy=top+H/2,m=Math.min(w,h)/2+34;
+      const r=[[44,44,44,12],[m,m,60,60],[12,44,44,44],[44,12,44,44]][i%4];
+      x.save();x.translate(PW/2,cy);x.rotate(i%2?.022:-.02);
+      rr(x,-w/2-34,-h/2-34,w+68,h+68,r);x.fillStyle=col;x.fill();
+      x.save();rr(x,-w/2,-h/2,w,h,r.map(v=>Math.max(16,v-34)));x.clip();x.drawImage(im,-w/2,-h/2,w,h);x.restore();
+      x.restore();bottom=cy+h/2+34}
+    const fm=I.fam(c.photo.by),cy2=bottom+44;
+    rr(x,150,cy2,PW-300,150,26);x.fillStyle='#FFFFFF';x.fill();x.lineWidth=5;x.strokeStyle='#14183A';x.stroke();
+    T(x,fm?`Trouvée par ${fm.icon} ${fm.name}`:'Trouvée pendant la visite',192,cy2+66,'700 42px '+F.atk,'#14183A',null,PW-384);
+    T(x,choiceLine(I,c),192,cy2+116,'32px '+F.atk,'#4A5068',null,PW-384);
+    if(others.length){let y=cy2+214;T(x,'LES AUTRES CANDIDATES',150,y,'700 26px '+F.atk,'#4A5068');y+=26;
+      const g=28,w=Math.min((PW-300-g*3)/4,PH-100-y);
+      for(let k=0;k<Math.min(others.length,4);k++){const p=others[k],X=150+k*(w+g);if(w<120)break;const b=await bitmap(p.id);
+        rr(x,X,y,w,w,26);x.fillStyle='#EEF1FB';x.fill();if(b){x.save();rr(x,X,y,w,w,26);x.clip();cover(x,b,X,y,w,w);x.restore()}
+        const mm=I.fam(p.by);if(mm)avatarDisc(x,mm,X+44,y+w-44,26)}}
+    this.foot(x,M,i+2,tot);return cv},
+  async end(M,I,tot){const [cv,x]=newPage('#FFFFFF');
+    if(I.om){T(x,'Mes trouvailles',100,210,'100px '+F.lil,'#14183A');const n=I.found.length;
+      T(x,`${I.om.name} a trouvé ${n} photo${n>1?'s':''} pendant la visite.`,100,295,'700 36px '+F.atk,'#14183A',null,PW-200);
+      if(I.inFam)T(x,`${I.inFam} ${I.inFam>1?'sont':'est'} aussi dans l'album de la famille !`,100,350,'36px '+F.atk,'#4A5068',null,PW-200);
+      if(!n)T(x,'Pas de photo cette fois. La prochaine fois !',100,500,'48px '+F.lil,'#2340C8');
+      const g=36,w=(PW-200-2*g)/3;
+      for(let k=0;k<Math.min(n,9);k++){const p=I.found[k],X=100+(k%3)*(w+g),Y=420+Math.floor(k/3)*(w+g),col=PAPER[k%4];
+        rr(x,X,Y,w,w,[34,34,34,10]);x.fillStyle=col;x.fill();const b=await bitmap(p.id);
+        if(b){x.save();rr(x,X+14,Y+14,w-28,w-28,22);x.clip();cover(x,b,X+14,Y+14,w-28,w-28);x.restore()}
+        disc(x,X+48,Y+48,34,'#FFFFFF');emoji(x,p.icon,X+48,Y+51,40)}
+      if(n>9)T(x,`… et ${n-9} autre${n>10?'s':''}`,100,420+3*(w+g)+10,'700 30px '+F.atk,'#4A5068')}
+    else{T(x,'Qui a trouvé',100,200,'92px '+F.lil,'#14183A');T(x,'les photos gagnantes ?',100,300,'92px '+F.lil,'#14183A',null,PW-200);
+      let y=390;const fam=M.family.slice().sort((a,b)=>I.wins[b.id].length-I.wins[a.id].length);
+      for(let k=0;k<fam.length&&y<PH-260;k++){const m=fam[k],w=I.wins[m.id];
+        x.save();x.translate(PW/2,y+80);x.rotate(k%2?.012:-.012);rr(x,-(PW-200)/2,-80,PW-200,160,[44,44,44,12]);x.fillStyle=m.color||PAPER[k%4];x.fill();x.restore();
+        avatarDisc(x,m,205,y+80,52);T(x,m.name,290,y+102,'58px '+F.lil,'#FFFFFF',null,360);
+        if(w.length){x.save();x.font=`50px ${F.emo}`;x.textAlign='right';x.fillText(w.join(' '),PW-150,y+98,PW-150-680);x.restore()}
+        else T(x,'pas cette fois',PW-150,y+96,'700 30px '+F.atk,'#FFFFFF','right');
+        y+=192}}
+    this.foot(x,M,tot,tot);return cv}
+};
+
+/* — Style 2 : cartel de musée (sobre, pour les parents) — */
+function museumFrame(x,im,cx,top,maxW,maxH){const fr=16,mat=Math.round(Math.min(maxW,maxH)*.07);
+  const [w,h]=im?fit(im,maxW-2*(fr+mat),maxH-2*(fr+mat)):[maxW-2*(fr+mat),(maxH-2*(fr+mat))*.7];const W=w+2*(fr+mat),H=h+2*(fr+mat),X=cx-W/2;
+  x.save();x.shadowColor='rgba(0,0,0,.28)';x.shadowBlur=30;x.shadowOffsetY=14;x.fillStyle='#1E1E1E';x.fillRect(X,top,W,H);x.restore();
+  x.fillStyle='#FFFFFF';x.fillRect(X+fr,top+fr,W-2*fr,H-2*fr);x.fillStyle='rgba(0,0,0,.14)';x.fillRect(X+fr+mat-2,top+fr+mat-2,w+4,h+4);
+  if(im)x.drawImage(im,X+fr+mat,top+fr+mat,w,h);else{x.fillStyle='#E4E4E0';x.fillRect(X+fr+mat,top+fr+mat,w,h);emoji(x,'🏛️',cx,top+H/2,160)}
+  return {X,Y:top,W,H}}
+function museumLabel(x,X,Y,w,lines){const h=lines.reduce((a,l)=>a+l[3],44);
+  x.save();x.shadowColor='rgba(0,0,0,.14)';x.shadowBlur=10;x.shadowOffsetY=4;x.fillStyle='#FFFFFF';x.fillRect(X,Y,w,h);x.restore();
+  let y=Y+22;lines.forEach(([t,f,col,lh])=>{y+=lh;T(x,t,X+30,y-12,f,col,null,w-60)});return Y+h}
+const R_CARTEL={
+  foot(x,M,n,tot){T(x,`— ${n} —`,PW/2,PH-56,'italic 24px '+F.serif,'#6B6B6B','center')},
+  async front(M,I,tot){const [cv,x]=newPage('#F1F1EE'),om=I.om;
+    T(x,spaced(om?`L'ALBUM DE ${om.name.toUpperCase()}`:'ALBUM DE FAMILLE'),PW/2,170,'700 26px '+F.atk,'#6B6B6B','center');
+    x.save();x.font='700 82px '+F.serif;x.fillStyle='#1A1A1A';x.textAlign='center';const y=wrap(x,M.title,PW/2,285,PW-240,96,2);x.restore();
+    T(x,I.date,PW/2,y-10,'italic 36px '+F.serif,'#4A4A4A','center');
+    const fp=await bitmap(M.familyPhoto&&M.familyPhoto.id),b=museumFrame(x,fp,PW/2,y+60,PW-300,860);
+    const names=M.family.map(m=>m.name),others=om?names.filter(n=>n!==om.name):names;
+    museumLabel(x,b.X+b.W-470,b.Y+b.H+52,470,[
+      [om?`${om.icon} ${om.name} au musée`:'La famille au musée','700 32px '+F.serif,'#1A1A1A',46],
+      [`Photographie, ${I.year}`,'italic 28px '+F.serif,'#1A1A1A',40],
+      [others.length?`Avec ${joinNames(others)}`:' ','26px '+F.atk,'#4A4A4A',36],
+      [om?`Collection de ${om.name}`:'Collection de la famille','24px '+F.atk,'#6B6B6B',34]]);
+    T(x,`${I.cats.length} œuvre${I.cats.length>1?'s':''} choisie${I.cats.length>1?'s':''}`,b.X,b.Y+b.H+92,'italic 30px '+F.serif,'#4A4A4A');
+    this.foot(x,M,1,tot);return cv},
+  async page(M,I,c,i,tot){const [cv,x]=newPage('#F1F1EE');
+    T(x,spaced('N° '+c.n),100,130,'700 24px '+F.atk,'#6B6B6B');
+    const im=await bitmap(c.photo.id),b=museumFrame(x,im,PW/2,180,PW-240,1060),fm=I.fam(c.photo.by);
+    const lw=560,LX=PW-100-lw,LY=b.Y+b.H+60;
+    museumLabel(x,LX,LY,lw,[
+      [`${c.icon} ${c.name}`,'700 32px '+F.serif,'#1A1A1A',48],
+      [fm?`Trouvée par ${fm.name}`:'Trouvée pendant la visite','italic 30px '+F.serif,'#1A1A1A',42],
+      [`${M.title}, ${I.date}`,'25px '+F.atk,'#4A4A4A',38],
+      [choiceLine(I,c),'24px '+F.atk,'#6B6B6B',36]]);
+    const others=I.om?[]:c.photos.filter(p=>p.id!==c.photo.id);
+    if(others.length){
+      T(x,'Autres propositions',100,LY+30,'italic 26px '+F.serif,'#6B6B6B');
+      for(let k=0;k<Math.min(others.length,3);k++){const ob=await bitmap(others[k].id),X=100+k*150,Y=LY+56;
+        x.fillStyle='#1E1E1E';x.fillRect(X,Y,130,130);x.fillStyle='#FFFFFF';x.fillRect(X+6,Y+6,118,118);if(ob)cover(x,ob,X+16,Y+16,98,98)}}
+    this.foot(x,M,i+2,tot);return cv},
+  async end(M,I,tot){const [cv,x]=newPage('#F1F1EE'),om=I.om;
+    T(x,'Liste des œuvres',100,210,'700 70px '+F.serif,'#1A1A1A');
+    T(x,om?`Collection de ${om.name} · ${M.title}, ${I.date}`:`${M.title}, ${I.date}`,100,270,'italic 30px '+F.serif,'#4A4A4A',null,PW-200);
+    let y=360;
+    for(const c of I.cats){if(y>PH-420)break;const fm=I.fam(c.photo.by);
+      T(x,'N° '+c.n,100,y,'700 24px '+F.atk,'#6B6B6B');T(x,c.name,210,y,'32px '+F.serif,'#1A1A1A',null,560);
+      T(x,fm?`trouvée par ${fm.name}`:'',PW-100,y,'italic 28px '+F.serif,'#4A4A4A','right',300);
+      x.fillStyle='#CFCFCA';x.fillRect(100,y+26,PW-200,2);y+=78}
+    y+=50;
+    if(om){const n=I.found.length;T(x,`Les trouvailles de ${om.name}`,100,y,'700 40px '+F.serif,'#1A1A1A');
+      T(x,`${n} photo${n>1?'s':''} pendant la visite`,100,y+48,'italic 28px '+F.serif,'#4A4A4A');
+      for(let k=0;k<Math.min(n,6);k++){const b=await bitmap(I.found[k].id),X=100+k*170,Y=y+80;if(Y+150>PH-110)break;
+        x.fillStyle='#1E1E1E';x.fillRect(X,Y,150,150);x.fillStyle='#FFFFFF';x.fillRect(X+6,Y+6,138,138);if(b)cover(x,b,X+16,Y+16,118,118)}}
+    else{T(x,'Les explorateurs',100,y,'700 40px '+F.serif,'#1A1A1A');y+=60;
+      M.family.slice().sort((a,b)=>I.wins[b.id].length-I.wins[a.id].length).forEach(m=>{if(y>PH-120)return;const n=I.wins[m.id].length;
+        T(x,`${m.name}`,100,y,'32px '+F.serif,'#1A1A1A');T(x,n?`${n} œuvre${n>1?'s':''} retenue${n>1?'s':''}`:'—',PW-100,y,'italic 28px '+F.serif,'#4A4A4A','right');y+=54})}
+    this.foot(x,M,tot,tot);return cv}
+};
+
+/* — Style 3 : carnet d'explorateur (polaroïds et écriture à la main) — */
+function dotPage(){const [c,x]=newPage('#FFFFFF');x.fillStyle='#CCD3CF';for(let yy=40;yy<PH;yy+=40)for(let xx=40;xx<PW;xx+=40){x.beginPath();x.arc(xx,yy,2.4,0,Math.PI*2);x.fill()}return [c,x]}
+function tape(x,cx,cy,w,ang,col){x.save();x.translate(cx,cy);x.rotate(ang);x.fillStyle=col;x.fillRect(-w/2,-w*.16,w,w*.32);x.restore()}
+function squiggle(x,X,Y,w,col){x.save();x.strokeStyle=col;x.lineWidth=7;x.lineCap='round';x.beginPath();x.moveTo(X,Y);
+  for(let k=1;k<=8;k++)x.quadraticCurveTo(X+w*(k-.5)/8,Y+(k%2?-9:9),X+w*k/8,Y);x.stroke();x.restore()}
+function polaroid(x,im,cx,cy,maxW,maxH,ang,cap){const p=Math.round(maxW*.045)+10,bot=Math.round(p*3.1);
+  const [w,h]=im?fit(im,maxW-2*p,maxH-p-bot):[maxW-2*p,(maxH-p-bot)*.75];const W=w+2*p,H=h+p+bot;
+  x.save();x.translate(cx,cy);x.rotate(ang);x.shadowColor='rgba(0,0,0,.25)';x.shadowBlur=22;x.shadowOffsetY=8;x.fillStyle='#FFFFFF';x.fillRect(-W/2,-H/2,W,H);
+  x.shadowColor='rgba(0,0,0,0)';if(im)x.drawImage(im,-W/2+p,-H/2+p,w,h);else{x.fillStyle='#E6EAE8';x.fillRect(-W/2+p,-H/2+p,w,h);emoji(x,'🏛️',0,-H/2+p+h/2,Math.min(w,h)*.4)}
+  if(cap){x.font=`${Math.round(bot*.46)}px ${F.hand}`;x.fillStyle='#2E3338';x.textAlign='center';x.fillText(cap,0,H/2-bot*.34,W-2*p)}
+  x.restore();return {W,H}}
+const R_CARNET={
+  foot(x,M,n,tot){T(x,`page ${n}`,PW-90,PH-50,'36px '+F.hand,'#13817F','right')},
+  async front(M,I,tot){const [cv,x]=dotPage(),om=I.om;
+    T(x,om?'Le carnet de':'Notre carnet du',110,190,'66px '+F.hand,'#13817F');
+    x.font='128px '+F.hand;x.fillStyle='#2E3338';const y=wrap(x,om?om.name:M.title,110,310,om?PW-420:PW-220,118,2);
+    squiggle(x,110,y-95,Math.min(560,PW-220),'#E9762B');
+    T(x,I.date,110,y,'50px '+F.hand,'#13817F');
+    if(om)avatarDisc(x,om,PW-200,240,90);
+    const fp=await bitmap(M.familyPhoto&&M.familyPhoto.id),cy=y+420,pc=polaroid(x,fp,PW/2,cy,820,740,-.045,om?'avec ma famille':'tous ensemble !');
+    tape(x,PW/2-210,cy-pc.H/2+8,190,-.3,'rgba(233,118,43,.45)');tape(x,PW/2+230,cy-pc.H/2+16,170,.32,'rgba(19,129,127,.38)');
+    let yy=cy+pc.H/2+90;T(x,'Les explorateurs :',110,yy,'54px '+F.hand,'#2E3338');yy+=78;let xx=110;
+    M.family.forEach(m=>{x.font='48px '+F.hand;const w=x.measureText(m.name).width+90;if(xx+w>PW-100){xx=110;yy+=70}
+      emoji(x,m.icon,xx+28,yy-16,50);T(x,m.name,xx+66,yy,'48px '+F.hand,'#2E3338');xx+=w+30});
+    for(let k=0;k<M.total;k++)starShape(x,140+k*Math.min(80,(PW-260)/Math.max(1,M.total)),PH-130,30,k<M.stars?'#E9762B':null,'#2E3338',3.5,k%2?.18:-.1);
+    this.foot(x,M,1,tot);return cv},
+  async page(M,I,c,i,tot){const [cv,x]=dotPage(),ang=i%2?.035:-.03;
+    T(x,'n° '+c.n,250,118,'46px '+F.hand,'#E9762B');emoji(x,c.icon,150,180,110);
+    x.font='88px '+F.hand;x.fillStyle='#2E3338';const yT=wrap(x,c.name,250,205,PW-340,84,2);
+    const others=I.om?[]:c.photos.filter(p=>p.id!==c.photo.id),top=Math.max(yT,300),H=others.length?900:1180;
+    const im=await bitmap(c.photo.id),fm=I.fam(c.photo.by);
+    const pc=polaroid(x,im,PW/2,top+H/2,PW-260,H-40,ang,fm?`trouvée par ${fm.icon} ${fm.name}`:'');
+    tape(x,PW/2,top+H/2-pc.H/2+4,220,ang*3,i%2?'rgba(19,129,127,.38)':'rgba(233,118,43,.45)');
+    const note=I.om?(c.famWin&&c.famWin.id===c.photo.id&&c.photos.length>1?'mon choix… et celui de la famille !':(c.photos.length>1?'mon choix !':'')):(c.photos.length>1?`gagnante du vote (${c.photos.length} photos)`:'');
+    if(note){T(x,note,PW-130,top+H+44,'50px '+F.hand,'#13817F','right',PW-260);starShape(x,PW-90,top+H+28,22,'#E9762B','#2E3338',3,.2)}
+    if(others.length){T(x,'les autres :',120,top+H+44,'48px '+F.hand,'#2E3338');
+      for(let k=0;k<Math.min(others.length,4);k++){const b=await bitmap(others[k].id),mm=I.fam(others[k].by);
+        polaroid(x,b,120+k*270+125,top+H+250,250,300,k%2?.06:-.05,mm?mm.icon:'')}}
+    this.foot(x,M,i+2,tot);return cv},
+  async end(M,I,tot){const [cv,x]=dotPage();
+    if(I.om){T(x,'Mes trouvailles',110,210,'110px '+F.hand,'#2E3338');squiggle(x,110,240,520,'#E9762B');const n=I.found.length;
+      T(x,n?`${n} photo${n>1?'s':''} trouvée${n>1?'s':''} pendant la visite${I.inFam?`, dont ${I.inFam} dans l'album de la famille`:''} !`:'pas de photo cette fois… la prochaine fois !',110,320,'48px '+F.hand,'#13817F',null,PW-220);
+      for(let k=0;k<Math.min(n,9);k++){const p=I.found[k],b=await bitmap(p.id);polaroid(x,b,110+165+(k%3)*340,600+Math.floor(k/3)*400,320,370,((k*7)%5-2)*.025,p.icon)}}
+    else{T(x,'Les explorateurs',110,210,'110px '+F.hand,'#2E3338');squiggle(x,110,240,560,'#E9762B');
+      let y=380;M.family.slice().sort((a,b)=>I.wins[b.id].length-I.wins[a.id].length).forEach(m=>{if(y>PH-200)return;const w=I.wins[m.id];
+        avatarDisc(x,m,170,y-10,52);T(x,m.name,250,y+8,'64px '+F.hand,'#2E3338',null,380);
+        for(let k=0;k<Math.max(w.length,1)&&k<8;k++)starShape(x,700+k*62,y-10,24,k<w.length?'#E9762B':null,'#2E3338',3,k%2?.2:-.1);
+        if(w.length){x.save();x.font=`40px ${F.emo}`;x.fillText(w.join(' '),250,y+72,PW-360);x.restore()}
+        y+=170})}
+    this.foot(x,M,tot,tot);return cv}
+};
+const PDF_R={decoupe:R_DECOUPE,cartel:R_CARTEL,carnet:R_CARNET};
+async function pdfPages(M,tpl){
+  try{await Promise.all(['70px '+F.lil,'700 40px '+F.atk,'40px '+F.atk,'60px '+F.hand,'700 60px '+F.serif,'italic 40px '+F.serif,'40px '+F.serif].map(f=>document.fonts.load(f)))}catch(e){}
+  const I=pdfInfo(M),R=PDF_R[tpl]||R_DECOUPE,pages=[],tot=I.cats.length+2;
+  pages.push(await R.front(M,I,tot));
+  for(let i=0;i<I.cats.length;i++)pages.push(await R.page(M,I,I.cats[i],i,tot));
+  pages.push(await R.end(M,I,tot));
   return pages;
 }
-async function makePDF(M){
-  const pages=await pdfPages(M),enc=new TextEncoder(),parts=[],offs=[];let len=0;
+async function makePDF(M,tpl){
+  const pages=await pdfPages(M,tpl),enc=new TextEncoder(),parts=[],offs=[];let len=0;
   const push=p=>{const b=typeof p==='string'?enc.encode(p):p;parts.push(b);len+=b.length};
   const W=595.28,H=841.89,n=pages.length,N=3+3*n;
   push('%PDF-1.4\n');push(new Uint8Array([37,226,227,207,211,10]));
@@ -493,12 +690,14 @@ async function makePDF(M){
 }
 /* Les fichiers sont préparés d'abord, puis partagés au toucher suivant (sinon le téléphone bloque le partage) */
 let ready=null,busy=null;
-function modelFor(vid){const V=vid&&S.archive.find(x=>x.id===vid);return V?visitModel(V):currentModel()}
-async function buildFiles(kind,vid){const M=modelFor(vid),base=`${slug(M.title)}-${stamp()}`;
-  if(kind==='pdf') return [new File([await makePDF(M)],`album-${base}.pdf`,{type:'application/pdf'})];
+function modelFor(vid,owner){const V=vid&&S.archive.find(x=>x.id===vid);return V?visitModel(V,owner):currentModel(owner)}
+function exportKey(kind,vid){return kind==='backup'?'backup:':kind+':'+vid+':'+(view.owner||'')+(kind==='pdf'?':'+(S.pdfTpl||'decoupe'):'')}
+async function buildFiles(kind,vid,owner){const M=modelFor(vid,owner),base=`${slug(M.title)}${M.ownerM?'-'+slug(M.ownerM.name):''}-${stamp()}`;
+  if(kind==='pdf') return [new File([await makePDF(M,S.pdfTpl||'decoupe')],`album-${base}.pdf`,{type:'application/pdf'})];
   if(kind==='img') return [new File([await albumImage(M)],`album-${base}.jpg`,{type:'image/jpeg'})];
   if(kind==='backup') return [await makeBackup()];
-  const ids=[...(M.familyPhoto?[M.familyPhoto.id]:[]),...M.cats.flatMap(c=>c.photos.map(p=>p.id))];
+  const ids=M.ownerM?[...new Set([...M.cats.filter(c=>c.photo).map(c=>c.photo.id),...M.cats.flatMap(c=>c.photos.filter(p=>p.by===M.owner).map(p=>p.id))])]
+    :[...(M.familyPhoto?[M.familyPhoto.id]:[]),...M.cats.flatMap(c=>c.photos.map(p=>p.id))];
   const bs=(await Promise.all(ids.map(getBlob))).filter(Boolean);
   return bs.map((b,i)=>new File([b],`${base}-${i+1}.jpg`,{type:'image/jpeg'}));
 }
@@ -506,7 +705,7 @@ async function photoData(p){const b=await getBlob(p.id);return b?{id:p.id,by:p.b
 async function makeBackup(){
   const parts=['{"app":"album-musee-backup","v":1,"saved":'+Date.now()+',"archive":['];
   for(let i=0;i<S.archive.length;i++){const v=S.archive[i];
-    const cats=[];for(const c of v.cats){const ph=[];for(const p of c.photos){const d=await photoData(p);if(d)ph.push(d)}cats.push({icon:c.icon,name:c.name,winner:c.winner,photos:ph})}
+    const cats=[];for(const c of v.cats){const ph=[];for(const p of c.photos){const d=await photoData(p);if(d)ph.push(d)}cats.push({icon:c.icon,name:c.name,winner:c.winner,picks:c.picks||{},photos:ph})}
     const fp=v.familyPhoto?await photoData(v.familyPhoto):null;
     parts.push((i?',':'')+JSON.stringify({id:v.id,title:v.title,date:v.date,stars:v.stars,total:v.total,family:v.family,familyPhoto:fp,cats}))}
   parts.push(']}');
@@ -517,7 +716,7 @@ function readBackup(text){try{const B=JSON.parse(text);if(B&&B.app==='album-muse
 async function restoreBackup(B){let visits=0,photos=0;const have=new Set(S.archive.map(v=>v.id));
   for(const v of B.archive){if(have.has(v.id))continue;
     const put=async p=>{if(!p||!p.data)return null;try{putBlob(p.id,await (await fetch(p.data)).blob());photos++;return {id:p.id,by:p.by,ts:p.ts}}catch(e){return null}};
-    const cats=[];for(const c of v.cats){const ph=[];for(const p of c.photos){const q=await put(p);if(q)ph.push(q)}cats.push({icon:c.icon,name:c.name,winner:c.winner,photos:ph})}
+    const cats=[];for(const c of v.cats){const ph=[];for(const p of c.photos){const q=await put(p);if(q)ph.push(q)}cats.push({icon:c.icon,name:c.name,winner:c.winner,picks:c.picks||{},photos:ph})}
     S.archive.push({id:v.id,title:v.title,date:v.date,stars:v.stars,total:v.total,family:v.family,familyPhoto:await put(v.familyPhoto),cats});visits++}
   S.archive.sort((a,b)=>b.date-a.date);save();return {visits,photos};
 }
@@ -526,11 +725,11 @@ function shareFiles(files){
   if(navigator.canShare&&navigator.canShare({files}))navigator.share({files}).catch(e=>{if(!e||e.name!=='AbortError')fb()});else fb();
 }
 function exportButtons(vid){
-  const one=(kind,label,cls)=>{const key=kind+':'+vid;
+  const one=(kind,label,cls)=>{const key=exportKey(kind,vid);
     if(ready&&ready.key===key) return `<button class="btn ${cls} coral" data-sharenow>📤 ${kind==='pdf'?'Ouvrir / partager le PDF':kind==='img'?"Enregistrer l'image":kind==='backup'?'Envoyer la sauvegarde':'Enregistrer les photos'}</button>`;
     if(busy===key) return `<button class="btn ${cls}" disabled>Préparation…</button>`;
     return `<button class="btn ${cls}" data-make="${kind}" data-v="${vid}">${label}</button>`};
-  return `<div class="list">${one('pdf','📄 Créer le PDF de l’album','big')}${one('img',"🖼️ Album en une image",'ghost')}${one('all','Toutes les photos dans la galerie','ghost')}</div>`;
+  return `${tplPicker()}<div class="list">${one('pdf','📄 Créer le PDF de l’album','big')}${one('img',"🖼️ Album en une image",'ghost')}${one('all','Toutes les photos dans la galerie','ghost')}</div>`;
 }
 function famCard(M,editable){
   const p=M.familyPhoto;
@@ -543,13 +742,25 @@ function famCard(M,editable){
 }
 
 const fdate=t=>new Date(t).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
-function framesHTML(M){
-  return `<section class="wall">${M.cats.map(c=>{const p=c.photo,m=p&&M.family.find(x=>x.id===p.by);
-    return `<div class="frame ${p?'':'empty'}"><span class="pic">${p?`<img data-pid="${p.id}" alt="">`:`<span class="glyph">${esc(c.icon)}</span>`}</span>
-      ${p?`<span class="chip" aria-hidden="true">${esc(c.icon)}</span>`:''}
-      <span class="cartel"><span class="nm">${esc(c.name)}</span>${m?`<span class="by">${esc(m.icon)} trouvée par ${esc(m.name)}</span>`:'<span class="by">pas de photo</span>'}</span></div>`}).join('')}</section>`;
+function framesHTML(M,editable){
+  return `<section class="wall">${M.cats.map(c=>{const p=c.photo,m=p&&M.family.find(x=>x.id===p.by),can=editable&&c.photos.length>1,tag=can?'button':'div';
+    return `<${tag} class="frame ${p?'':'empty'}" ${can?`data-repick="${c.key}" aria-label="Changer la photo de ${esc(c.name)}"`:''}><span class="pic">${p?`<img data-pid="${p.id}" alt="">`:`<span class="glyph">${esc(c.icon)}</span>`}</span>
+      ${p?`<span class="chip" aria-hidden="true">${esc(c.icon)}</span>`:''}${can?'<span class="chg">changer</span>':''}
+      <span class="cartel"><span class="nm">${esc(c.name)}</span>${m?`<span class="by">${esc(m.icon)} trouvée par ${esc(m.name)}</span>`:'<span class="by">pas de photo</span>'}</span></${tag}>`}).join('')}</section>`;
+}
+function ownerPicker(M){
+  return `<section class="albpick"><h3>Quel album ?</h3><div class="chips">
+    <button class="chipbtn ${M.owner?'':'on'}" data-owner=""><span class="av" style="background:var(--cobalt)" aria-hidden="true">★</span><span>Famille<small>les votes</small></span></button>
+    ${M.family.map(m=>`<button class="chipbtn ${M.owner===m.id?'on':''}" data-owner="${m.id}">${av(m)}<span>${esc(m.name)}<small>son album</small></span></button>`).join('')}</div>
+    <p class="note">${M.ownerM?`L'album de ${esc(M.ownerM.name)} reprend ses votes. Touchez une photo marquée « changer » pour en choisir une autre.`:"L'album de famille garde les photos gagnantes du vote. Chacun a aussi son propre album, avec ses choix à lui."}</p></section>`;
+}
+function tplPicker(){const t=S.pdfTpl||'decoupe';
+  return `<section class="tplpick"><h3>Style du PDF</h3><div class="tpls">${Object.entries(PDF_TPL).map(([k,lab])=>`<button class="tpl tpl-${k} ${t===k?'on':''}" data-tpl="${k}" aria-pressed="${t===k}"><span class="tplprev" aria-hidden="true"><i></i><b></b></span>${lab}</button>`).join('')}</div></section>`;
 }
 function podiumHTML(M){
+  if(M.ownerM){const mine=M.cats.flatMap(c=>c.photos.filter(p=>p.by===M.owner)),inFam=M.cats.filter(c=>c.famWin&&c.famWin.by===M.owner).length;
+    return `<section class="step"><h3>Les trouvailles de ${esc(M.ownerM.name)}</h3><p class="note">${mine.length} photo${mine.length>1?'s':''} trouvée${mine.length>1?'s':''} pendant la visite${inFam?`, dont ${inFam} gardée${inFam>1?'s':''} dans l'album de famille`:''}.</p>
+      ${mine.length?`<div class="thumbs">${mine.slice(0,12).map(p=>`<div class="thumb"><img data-pid="${p.id}" alt=""></div>`).join('')}</div>`:''}</section>`}
   const wins={};M.family.forEach(m=>wins[m.id]=0);M.cats.forEach(c=>{if(c.photo&&wins[c.photo.by]!==undefined)wins[c.photo.by]++});
   return `<div><h3 style="margin-bottom:8px">Qui a trouvé les photos gagnantes</h3><div class="podium">${M.family.slice().sort((a,b)=>wins[b.id]-wins[a.id]).map(m=>`<div class="item">${av(m)}<span class="grow">${esc(m.name)}</span>
      <span class="starline" style="font-size:1.3rem">${'<span class="star on">★</span>'.repeat(wins[m.id])||'<small class="note">pas cette fois</small>'}</span></div>`).join('')}</div></div>`;
@@ -711,13 +922,14 @@ function ballotView(){
 function nextBtn(){const nx=nextUndecided();
   return nx?`<button class="btn big coral" data-vote="${nx.id}">Cadre suivant : ${esc(nx.icon)}</button>`:`<button class="btn big" data-go="final">Voir notre album</button>`}
 function finalView(){
-  const M=currentModel();
+  const M=currentModel(view.owner||'');
   return `
     <button class="back" data-go="vote">← Le vote</button>
-    <div><div class="eyebrow">Album terminé</div><h1>${esc(S.title)}</h1></div>
-    ${starsBlock()}
-    ${famCard(M,true)}
-    ${framesHTML(M)}
+    <div><div class="eyebrow">${M.ownerM?esc(S.title):'Album terminé'}</div><h1>${M.ownerM?`L'album de ${esc(M.ownerM.name)}`:esc(S.title)}</h1></div>
+    ${ownerPicker(M)}
+    ${M.ownerM?'':starsBlock()}
+    ${famCard(M,!M.ownerM)}
+    ${framesHTML(M,!!M.ownerM)}
     ${podiumHTML(M)}
     ${exportButtons('')}
     <div class="list">
@@ -757,13 +969,14 @@ function backupBlock(){
 }
 function visitView(){
   const v=S.archive.find(x=>x.id===view.id); if(!v) return carnetView();
-  const M=visitModel(v);
+  const M=visitModel(v,view.owner||'');
   return `<button class="back" data-go="carnet">← Le carnet</button>
-    <div><div class="eyebrow">${fdate(v.date)}</div><h1>${esc(v.title)}</h1></div>
+    <div><div class="eyebrow">${fdate(v.date)}${M.ownerM?' · '+esc(v.title):''}</div><h1>${M.ownerM?`L'album de ${esc(M.ownerM.name)}`:esc(v.title)}</h1></div>
+    ${ownerPicker(M)}
     <section class="stars"><div class="grow"><div class="starline">${'<span class="star on">★</span>'.repeat(v.stars)}${'<span class="star">★</span>'.repeat(Math.max(0,v.total-v.stars))}</div>
       <small>${v.stars===v.total?'Album complet':`${v.stars} cadres remplis sur ${v.total}`}</small></div><span class="bonus ${v.stars===v.total?'on':''}" aria-hidden="true">★</span></section>
     ${famCard(M,false)}
-    ${framesHTML(M)}
+    ${framesHTML(M,!!M.ownerM)}
     ${podiumHTML(M)}
     ${exportButtons(v.id)}
     <div class="list">
@@ -939,6 +1152,12 @@ function sheetHTML(){
         <button class="btn ghost" data-savephoto="${p.id}">Dans la galerie</button>
         <button class="btn ghost" data-delphoto="${p.id}">${confirmKey==='ph'+p.id?'Sûr ? Retirer':'Retirer'}</button></div></div></div>`;
   }
+  if(sheet.type==='repick'){const M=modelFor(view.name==='visit'?view.id:'',view.owner||''),c=M.cats.find(x=>x.key===sheet.key);if(!c||!M.ownerM)return '';
+    return `<div class="sheet" data-backdrop><div><div class="cat-head"><span class="glyph" aria-hidden="true">${esc(c.icon)}</span><h2>${esc(c.name)}</h2></div>
+      <p class="note">Quelle photo va dans l'album de ${esc(M.ownerM.name)} ?</p>
+      <div class="vote-grid">${c.photos.map(p=>{const fm=M.family.find(f=>f.id===p.by),on=c.photo&&c.photo.id===p.id;
+        return `<button class="vote-card ${on?'lead':''}" data-setpick="${p.id}" aria-pressed="${on}"><img data-pid="${p.id}" alt="">${on?'<span class="crown">✓</span>':''}<span class="tally">${fm?av(fm):''}</span></button>`}).join('')}</div>
+      <button class="btn ghost" data-close>Fermer</button></div></div>`}
   if(sheet.type==='newvisit'){
     const nb=S.cats.reduce((a,c)=>a+c.photos.length,0);
     return `<div class="sheet" data-backdrop><div><h2>Nouvelle visite</h2>
@@ -1082,6 +1301,13 @@ document.addEventListener('click',e=>{
   }
   if(d.resethunt){if(confirmKey!=='hunt'){confirmKey='hunt';return render()}
     const st=hstate(d.resethunt);Object.values(st.found).forEach(f=>delBlob(f.id));S.hunts[d.resethunt]={found:{},ticks:{},hints:{}};confirmKey=null;save();toast('Jeu remis à zéro');return render()}
+  if(d.owner!==undefined){view.owner=d.owner;ready=null;busy=null;confirmKey=null;return render()}
+  if(d.tpl){S.pdfTpl=d.tpl;save();ready=null;busy=null;return render()}
+  if(d.repick!==undefined){sheet={type:'repick',key:d.repick};return render()}
+  if(d.setpick){const own=view.owner;if(!own)return;
+    if(view.name==='visit'){const v=S.archive.find(x=>x.id===view.id),c=v&&v.cats[+sheet.key];if(c){c.picks=c.picks||{};c.picks[own]=d.setpick}}
+    else{S.picks=S.picks||{};(S.picks[own]=S.picks[own]||{})[sheet.key]=d.setpick}
+    save();sheet=null;ready=null;busy=null;toast('Photo changée');return render()}
   /* jeu de piste */
   if(d.hunt){S.lastHunt=d.hunt;save();return go({name:'hunt',id:d.hunt})}
   if(d.clue){return go({name:'clue',hunt:view.hunt||view.id,id:d.clue})}
@@ -1123,8 +1349,8 @@ document.addEventListener('click',e=>{
   if(d.skip){const c=cat(view.id);delete c.votes[d.skip];c.skipped=Object.assign(c.skipped||{},{[d.skip]:1});save();view.ready=null;return render()}
   if(d.pickwin){const c=cat(view.id);c.winner=d.pickwin;save();setTimeout(confetti,150);return render()}
   if(d.revote){const c=cat(d.revote);c.votes={};c.skipped={};c.winner=null;S.voteCelebrated=false;save();view.ready=null;return render()}
-  if(d.make){const key=d.make+':'+d.v;busy=key;ready=null;render();
-    buildFiles(d.make,d.v).then(files=>{busy=null;ready=files.length?{key,files}:null;if(!files.length)toast('Aucune photo à enregistrer');render()})
+  if(d.make){const key=exportKey(d.make,d.v);busy=key;ready=null;render();
+    buildFiles(d.make,d.v,view.owner||'').then(files=>{busy=null;ready=files.length?{key,files}:null;if(!files.length)toast('Aucune photo à enregistrer');render()})
       .catch(()=>{busy=null;toast('La préparation a échoué, réessayez');render()});return}
   if(d.sharenow!==undefined&&ready){shareFiles(ready.files);if(ready.key==='backup:'){toast('Choisissez Drive ou votre mail pour la garder en lieu sûr')}return}
   if(d.dorestore!==undefined){t.disabled=true;t.textContent='Restauration…';
