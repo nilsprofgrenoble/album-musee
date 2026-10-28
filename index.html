@@ -905,16 +905,16 @@ function ballotView(){
   const voter=S.family.find(m=>!valid(c.votes[m.id])&&!(c.skipped||{})[m.id]);
   const nVotes=S.family.filter(m=>valid(c.votes[m.id])).length;
   if(S.voteMode!=='secret'&&!c.winner&&!(c.closed&&nVotes)){
-    const sk=c.skipped||{},cur=member(view.rv)&&!valid(c.votes[view.rv])&&!sk[view.rv]?view.rv:(voter?voter.id:null);
+    const sk=c.skipped||{},cur=member(view.rv)&&!sk[view.rv]?view.rv:(voter?voter.id:null);
     const chips=S.family.map(m=>{const v=valid(c.votes[m.id]),k=sk[m.id];
-      return `<button class="chipbtn ${m.id===cur?'on':''}" data-rvoter="${m.id}" aria-pressed="${m.id===cur}">${av(m)}<span>${esc(m.name)}<small>${v?'✓ a voté':k?'passe':m.id===cur?'à toi !':'pas encore'}</small></span></button>`}).join('');
+      return `<button class="chipbtn ${m.id===cur?'on':''}" data-rvoter="${m.id}" aria-pressed="${m.id===cur}">${av(m)}<span>${esc(m.name)}<small>${m.id===cur?(v?'change ou annule':'à toi !'):v?'✓ a voté':k?'passe':'pas encore'}</small></span></button>`}).join('');
     const tally={};c.photos.forEach(p=>tally[p.id]=[]);S.family.forEach(m=>{if(valid(c.votes[m.id]))tally[c.votes[m.id]].push(m.id)});
     const cards=c.photos.map(p=>`<button class="vote-card ${cur&&c.votes[cur]===p.id?'lead':''}" data-rballot="${p.id}" aria-label="Voter pour cette photo"><img data-pid="${p.id}" alt=""><span class="tally">${tally[p.id].map(m=>av(member(m))).join('')}</span></button>`).join('');
     const curM=member(cur);
     return `<button class="back" data-go="vote">← Le vote</button>
       <div class="cat-head"><span class="glyph" aria-hidden="true">${esc(c.icon)}</span><h2>${esc(c.name)}</h2></div>
       <div class="chips wrap">${chips}</div>
-      <p style="margin:0;font-weight:700">${curM?`${esc(curM.icon)} ${esc(curM.name)}, touche ta photo préférée`:'Tout le monde a voté ! On peut encore changer d’avis en touchant un animal.'}</p>
+      <p style="margin:0;font-weight:700">${curM?(valid(c.votes[curM.id])?`${esc(curM.icon)} ${esc(curM.name)} : touche une autre photo pour changer, ou la même pour annuler`:`${esc(curM.icon)} ${esc(curM.name)}, touche ta photo préférée`):'Tout le monde a voté ! On peut encore changer d’avis en touchant un animal.'}</p>
       <div class="vote-grid">${cards}</div>
       <button class="btn big ${voter?'ghost':'coral'}" data-rdone ${nVotes?'':'disabled'}>${voter?'Terminer le vote sans les autres':'Voir le résultat'}</button>
       ${curM?`<button class="btn ghost small" data-rskip="${curM.id}">${esc(curM.name)} ne vote pas</button>`:''}`;
@@ -954,7 +954,10 @@ function ballotView(){
       `C'est choisi ! ${w&&member(w.by)?`Photo trouvée par ${esc(member(w.by).name)} ${esc(member(w.by).icon)}`:''}`}</p>
     <div class="vote-grid">${cards}</div>
     ${tie?'':nextBtn()}
-    <button class="btn ghost small" data-revote="${c.id}">Revoter</button>`;
+    <section class="step"><h3>Quelqu'un change d'avis ?</h3>
+      <p class="note">Touchez son animal : seul son vote est annulé, il revote, les autres votes sont gardés.</p>
+      <div class="chips wrap">${S.family.map(m=>{const v=valid(c.votes[m.id]);return `<button class="chipbtn" data-unvote="${m.id}">${av(m)}<span>${esc(m.name)}<small>${v?'revoter':'voter'}</small></span></button>`}).join('')}</div>
+      <button class="btn ghost small" data-revote="${c.id}">Tout le monde revote</button></section>`;
 }
 function nextBtn(){const nx=nextUndecided();
   return nx?`<button class="btn big coral" data-vote="${nx.id}">Cadre suivant : ${esc(nx.icon)}</button>`:`<button class="btn big" data-go="final">Voir notre album</button>`}
@@ -1402,11 +1405,13 @@ document.addEventListener('click',e=>{
     mergeAlbum(A).then(n=>{sheet=null;toast(n?`${n} photo${n>1?'s':''} ajoutée${n>1?'s':''} !`:'Préparation reprise');go({name:'home'})});return}
   if(d.vote) return go({name:'ballot',id:d.vote});
   if(d.ready){view.ready=d.ready;return render()}
+  if(d.unvote){const c=cat(view.id);if(!c)return;delete c.votes[d.unvote];if(c.skipped)delete c.skipped[d.unvote];c.winner=null;c.closed=false;S.voteCelebrated=false;
+    view.rv=d.unvote;view.ready=null;save();window.scrollTo(0,0);return render()}
   if(d.votemode){S.voteMode=d.votemode;save();return render()}
   if(d.rvoter){view.rv=d.rvoter;const c=cat(view.id);if(c&&c.skipped)delete c.skipped[d.rvoter];save();return render()}
   if(d.rballot||d.rskip){const c=cat(view.id),sk=c.skipped=c.skipped||{},valid=id=>c.photos.some(p=>p.id===id);
     const who=d.rskip||(member(view.rv)&&!sk[view.rv]?view.rv:(S.family.find(m=>!valid(c.votes[m.id])&&!sk[m.id])||{}).id);if(!who)return;
-    if(d.rskip){delete c.votes[who];sk[who]=1}else{c.votes[who]=d.rballot;delete sk[who]}
+    if(d.rskip){delete c.votes[who];sk[who]=1}else if(c.votes[who]===d.rballot){delete c.votes[who];view.rv=who;save();toast('Vote annulé');return render()}else{c.votes[who]=d.rballot;delete sk[who]}
     const i=S.family.findIndex(m=>m.id===who),order=[...S.family.slice(i+1),...S.family.slice(0,i)];
     view.rv=(order.find(m=>!valid(c.votes[m.id])&&!sk[m.id])||{}).id||null;save();return render()}
   if(d.rdone!==undefined){const c=cat(view.id),sk=c.skipped=c.skipped||{},valid=id=>c.photos.some(p=>p.id===id);
