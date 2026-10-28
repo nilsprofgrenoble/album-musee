@@ -145,6 +145,10 @@ span.vthumb{display:grid;place-items:center;font-size:2.4rem;background:var(--wa
 .modebtn small{font-size:.75rem;color:var(--ink-soft)}
 .modebtn.on{border-color:var(--ink);background:var(--tint-y)}
 /* albums et styles de PDF */
+.frame.excluded{opacity:.32;filter:grayscale(1)}
+.chipbtn.incl{padding:8px 14px 8px 8px;font-size:.85rem}
+.chipbtn.incl .cbx{width:24px;height:24px;flex:none;border-radius:7px;border:2.5px solid var(--ink);display:inline-grid;place-items:center;font-size:.85rem;background:var(--card)}
+.chipbtn.incl:not(.on){opacity:.6;text-decoration:line-through}
 .albpick,.tplpick{display:flex;flex-direction:column;gap:10px}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;margin:0 -2px;scrollbar-width:none}
 .chips.wrap{flex-wrap:wrap;overflow:visible}
@@ -292,7 +296,7 @@ function freshState(prev){
     title: prev?prev.title:'Musée de Grenoble',
     family: prev?prev.family:[['Papa','🦊'],['Maman','🐻'],['Enfant 1','🐰'],['Enfant 2','🐼']].map(([n,i],k)=>({id:uid(),name:n,icon:i,color:COLORS[k]})),
     cats: (prev?prev.cats.map(c=>[c.icon,c.name]):DEFAULT_CATS).map(([i,n])=>({id:uid(),icon:i,name:n,photos:[],votes:{},winner:null})),
-    celebrated:false, voteCelebrated:false, gallery: prev?prev.gallery!==false:true, voteMode: prev?(prev.voteMode||'rapide'):'rapide', setupDone: prev?!!prev.setupDone:false, archive: prev?(prev.archive||[]):[], familyPhoto:null, picks:{}, pdfTpl: prev?(prev.pdfTpl||'decoupe'):'decoupe', hunts: prev?(prev.hunts||{}):{}, onboarded: prev?!!prev.onboarded:false, keepAwake: prev?prev.keepAwake:true, lastBackup: prev?prev.lastBackup:null, backupCount: prev?prev.backupCount:0, lastHunt: prev?prev.lastHunt:null
+    celebrated:false, voteCelebrated:false, gallery: prev?prev.gallery!==false:true, voteMode: prev?(prev.voteMode||'rapide'):'rapide', setupDone: prev?!!prev.setupDone:false, archive: prev?(prev.archive||[]):[], familyPhoto:null, picks:{}, excl:{}, pdfTpl: prev?(prev.pdfTpl||'decoupe'):'decoupe', hunts: prev?(prev.hunts||{}):{}, onboarded: prev?!!prev.onboarded:false, keepAwake: prev?prev.keepAwake:true, lastBackup: prev?prev.lastBackup:null, backupCount: prev?prev.backupCount:0, lastHunt: prev?prev.lastHunt:null
   };
 }
 /* ---------- stockage (mêmes clés que la version précédente) ---------- */
@@ -439,15 +443,16 @@ function pickFor(c,mid,picks){const ok=id=>id&&c.photos.find(p=>p.id===id);
   return ok(picks&&picks[c.id])||ok(c.votes&&c.votes[mid])||[...c.photos].reverse().find(p=>p.by===mid)||winnerOf(c)||c.photos[c.photos.length-1]||null}
 function currentModel(owner){const all=S.cats.flatMap(c=>c.photos),om=owner?member(owner):null,picks=om?((S.picks||{})[owner]||{}):null;
   return {id:'',title:S.title,owner:om?owner:'',ownerM:om||null,familyPhoto:S.familyPhoto||null,date:all.length?Math.min(...all.map(p=>p.ts)):Date.now(),family:S.family,stars:filled(),total:S.cats.length,
-    cats:S.cats.map(c=>{const win=winnerOf(c)||c.photos[c.photos.length-1]||null;return {key:c.id,icon:c.icon,name:c.name,photos:c.photos,photo:om?pickFor(c,owner,picks):winnerOf(c),famWin:win}})}}
+    cats:S.cats.map(c=>{const win=winnerOf(c)||c.photos[c.photos.length-1]||null;return {key:c.id,icon:c.icon,name:c.name,photos:c.photos,photo:om?pickFor(c,owner,picks):winnerOf(c),famWin:win,excluded:((S.excl||{})[om?owner:'']||[]).includes(c.id)}})}}
 function visitModel(v,owner){const om=owner?v.family.find(m=>m.id===owner):null;
   return {id:v.id,title:v.title,owner:om?owner:'',ownerM:om||null,familyPhoto:v.familyPhoto||null,date:v.date,family:v.family,stars:v.stars,total:v.total,
     cats:v.cats.map((c,i)=>{const ok=id=>id&&c.photos.find(p=>p.id===id),win=ok(c.winner)||c.photos[c.photos.length-1]||null;
       const ph=om?(ok((c.picks||{})[owner])||[...c.photos].reverse().find(p=>p.by===owner)||win):win;
-      return {key:String(i),icon:c.icon,name:c.name,photos:c.photos,photo:ph,famWin:win}})}}
+      return {key:String(i),icon:c.icon,name:c.name,photos:c.photos,photo:ph,famWin:win,excluded:((v.excl||{})[om?owner:'']||[]).includes(String(i))}})}}
 function archiveCurrent(){
   const all=S.cats.flatMap(c=>c.photos); if(!all.length){if(S.familyPhoto)delBlob(S.familyPhoto.id);return false}
-  S.archive.unshift({id:uid(),title:S.title,familyPhoto:S.familyPhoto||null,date:Math.min(...all.map(p=>p.ts)),stars:filled(),total:S.cats.length,
+  const filledCats=S.cats.filter(c=>c.photos.length),excl=Object.fromEntries(Object.entries(S.excl||{}).map(([o,ids])=>[o,ids.map(id=>filledCats.findIndex(c=>c.id===id)).filter(i=>i>=0).map(String)]));
+  S.archive.unshift({id:uid(),excl,title:S.title,familyPhoto:S.familyPhoto||null,date:Math.min(...all.map(p=>p.ts)),stars:filled(),total:S.cats.length,
     family:S.family.map(m=>({id:m.id,name:m.name,icon:m.icon,color:m.color})),
     cats:S.cats.filter(c=>c.photos.length).map(c=>({icon:c.icon,name:c.name,photos:c.photos.map(p=>({id:p.id,by:p.by,ts:p.ts})),winner:(winnerOf(c)||coverOf(c)).id,picks:Object.fromEntries(S.family.map(m=>[m.id,(pickFor(c,m.id,(S.picks||{})[m.id])||{}).id]))}))});
   return true;
@@ -700,12 +705,12 @@ async function makePDF(M,tpl){
 let ready=null,busy=null;
 function modelFor(vid,owner){const V=vid&&S.archive.find(x=>x.id===vid);return V?visitModel(V,owner):currentModel(owner)}
 function exportKey(kind,vid){return kind==='backup'?'backup:':kind+':'+vid+':'+(view.owner||'')+(kind==='pdf'?':'+(S.pdfTpl||'decoupe'):'')}
-async function buildFiles(kind,vid,owner){const M=modelFor(vid,owner),base=`${slug(M.title)}${M.ownerM?'-'+slug(M.ownerM.name):''}-${stamp()}`;
+async function buildFiles(kind,vid,owner){const M0=modelFor(vid,owner),M=Object.assign({},M0,{cats:M0.cats.filter(c=>!c.excluded)});M.total=M.cats.length;M.stars=M.cats.filter(c=>c.photo).length;const base=`${slug(M.title)}${M.ownerM?'-'+slug(M.ownerM.name):''}-${stamp()}`;
   if(kind==='pdf') return [new File([await makePDF(M,S.pdfTpl||'decoupe')],`album-${base}.pdf`,{type:'application/pdf'})];
   if(kind==='img') return [new File([await albumImage(M)],`album-${base}.jpg`,{type:'image/jpeg'})];
   if(kind==='backup') return [await makeBackup()];
-  const ids=M.ownerM?[...new Set([...M.cats.filter(c=>c.photo).map(c=>c.photo.id),...M.cats.flatMap(c=>c.photos.filter(p=>p.by===M.owner).map(p=>p.id))])]
-    :[...(M.familyPhoto?[M.familyPhoto.id]:[]),...M.cats.flatMap(c=>c.photos.map(p=>p.id))];
+  const ids=M0.ownerM?[...new Set([...M0.cats.filter(c=>c.photo).map(c=>c.photo.id),...M0.cats.flatMap(c=>c.photos.filter(p=>p.by===M0.owner).map(p=>p.id))])]
+    :[...(M0.familyPhoto?[M0.familyPhoto.id]:[]),...M0.cats.flatMap(c=>c.photos.map(p=>p.id))];
   const bs=(await Promise.all(ids.map(getBlob))).filter(Boolean);
   return bs.map((b,i)=>new File([b],`${base}-${i+1}.jpg`,{type:'image/jpeg'}));
 }
@@ -715,7 +720,7 @@ async function makeBackup(){
   for(let i=0;i<S.archive.length;i++){const v=S.archive[i];
     const cats=[];for(const c of v.cats){const ph=[];for(const p of c.photos){const d=await photoData(p);if(d)ph.push(d)}cats.push({icon:c.icon,name:c.name,winner:c.winner,picks:c.picks||{},photos:ph})}
     const fp=v.familyPhoto?await photoData(v.familyPhoto):null;
-    parts.push((i?',':'')+JSON.stringify({id:v.id,title:v.title,date:v.date,stars:v.stars,total:v.total,family:v.family,familyPhoto:fp,cats}))}
+    parts.push((i?',':'')+JSON.stringify({id:v.id,excl:v.excl||{},title:v.title,date:v.date,stars:v.stars,total:v.total,family:v.family,familyPhoto:fp,cats}))}
   parts.push(']}');
   S.lastBackup=Date.now();S.backupCount=S.archive.length;save();
   return new File(parts,`sauvegarde-carnet-musee-${stamp()}.txt`,{type:'text/plain'});
@@ -725,7 +730,7 @@ async function restoreBackup(B){let visits=0,photos=0;const have=new Set(S.archi
   for(const v of B.archive){if(have.has(v.id))continue;
     const put=async p=>{if(!p||!p.data)return null;try{putBlob(p.id,await (await fetch(p.data)).blob());photos++;return {id:p.id,by:p.by,ts:p.ts}}catch(e){return null}};
     const cats=[];for(const c of v.cats){const ph=[];for(const p of c.photos){const q=await put(p);if(q)ph.push(q)}cats.push({icon:c.icon,name:c.name,winner:c.winner,picks:c.picks||{},photos:ph})}
-    S.archive.push({id:v.id,title:v.title,date:v.date,stars:v.stars,total:v.total,family:v.family,familyPhoto:await put(v.familyPhoto),cats});visits++}
+    S.archive.push({id:v.id,excl:v.excl||{},title:v.title,date:v.date,stars:v.stars,total:v.total,family:v.family,familyPhoto:await put(v.familyPhoto),cats});visits++}
   S.archive.sort((a,b)=>b.date-a.date);save();return {visits,photos};
 }
 function shareFiles(files){
@@ -737,7 +742,7 @@ function exportButtons(vid){
     if(ready&&ready.key===key) return `<button class="btn ${cls} coral" data-sharenow>📤 ${kind==='pdf'?'Ouvrir / partager le PDF':kind==='img'?"Enregistrer l'image":kind==='backup'?'Envoyer la sauvegarde':'Enregistrer les photos'}</button>`;
     if(busy===key) return `<button class="btn ${cls}" disabled>Préparation…</button>`;
     return `<button class="btn ${cls}" data-make="${kind}" data-v="${vid}">${label}</button>`};
-  return `${tplPicker()}<div class="list">${one('pdf','📄 Créer le PDF de l’album','big')}${one('img',"🖼️ Album en une image",'ghost')}${one('all','Toutes les photos dans la galerie','ghost')}</div>`;
+  return `${pdfCadres(modelFor(vid,view.owner||''))}${tplPicker()}<div class="list">${one('pdf','📄 Créer le PDF de l’album','big')}${one('img',"🖼️ Album en une image",'ghost')}${one('all','Toutes les photos dans la galerie','ghost')}</div>`;
 }
 function famCard(M,editable){
   const p=M.familyPhoto;
@@ -752,7 +757,7 @@ function famCard(M,editable){
 const fdate=t=>new Date(t).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
 function framesHTML(M,editable){
   return `<section class="wall">${M.cats.map(c=>{const p=c.photo,m=p&&M.family.find(x=>x.id===p.by),can=editable&&c.photos.length>1,tag=can?'button':'div';
-    return `<${tag} class="frame ${p?'':'empty'}" ${can?`data-repick="${c.key}" aria-label="Changer la photo de ${esc(c.name)}"`:''}><span class="pic">${p?`<img data-pid="${p.id}" alt="">`:`<span class="glyph">${esc(c.icon)}</span>`}</span>
+    return `<${tag} class="frame ${p?'':'empty'} ${c.excluded?'excluded':''}" ${can?`data-repick="${c.key}" aria-label="Changer la photo de ${esc(c.name)}"`:''}><span class="pic">${p?`<img data-pid="${p.id}" alt="">`:`<span class="glyph">${esc(c.icon)}</span>`}</span>
       ${p?`<span class="chip" aria-hidden="true">${esc(c.icon)}</span>`:''}${can?'<span class="chg">changer</span>':''}
       <span class="cartel"><span class="nm">${esc(c.name)}</span>${m?`<span class="by">${esc(m.icon)} trouvée par ${esc(m.name)}</span>`:'<span class="by">pas de photo</span>'}</span></${tag}>`}).join('')}</section>`;
 }
@@ -761,6 +766,11 @@ function ownerPicker(M){
     <button class="chipbtn ${M.owner?'':'on'}" data-owner=""><span class="av" style="background:var(--cobalt)" aria-hidden="true">★</span><span>Famille<small>les votes</small></span></button>
     ${M.family.map(m=>`<button class="chipbtn ${M.owner===m.id?'on':''}" data-owner="${m.id}">${av(m)}<span>${esc(m.name)}<small>son album</small></span></button>`).join('')}</div>
     <p class="note">${M.ownerM?`L'album de ${esc(M.ownerM.name)} reprend ses votes. Touchez une photo marquée « changer » pour en choisir une autre.`:"L'album de famille garde les photos gagnantes du vote. Chacun a aussi son propre album, avec ses choix à lui."}</p></section>`;
+}
+function pdfCadres(M){const list=M.cats.filter(c=>c.photo);if(!list.length)return '';const n=list.filter(c=>!c.excluded).length;
+  return `<section class="tplpick"><h3>Cadres dans le PDF</h3>
+    <p class="note">${n} sur ${list.length}${M.ownerM?` dans l'album de ${esc(M.ownerM.name)}`:" dans l'album de famille"}. Touchez un cadre pour le retirer ou le remettre.</p>
+    <div class="chips wrap">${list.map(c=>`<button class="chipbtn incl ${c.excluded?'':'on'}" data-excl="${c.key}" aria-pressed="${!c.excluded}"><span class="cbx" aria-hidden="true">${c.excluded?'':'✓'}</span><span>${esc(c.icon)} ${esc(c.name)}</span></button>`).join('')}</div></section>`;
 }
 function tplPicker(){const t=S.pdfTpl||'decoupe';
   return `<section class="tplpick"><h3>Style du PDF</h3><div class="tpls">${Object.entries(PDF_TPL).map(([k,lab])=>`<button class="tpl tpl-${k} ${t===k?'on':''}" data-tpl="${k}" aria-pressed="${t===k}"><span class="tplprev" aria-hidden="true"><i></i><b></b></span>${lab}</button>`).join('')}</div></section>`;
@@ -1348,6 +1358,8 @@ document.addEventListener('click',e=>{
   if(d.resethunt){if(confirmKey!=='hunt'){confirmKey='hunt';return render()}
     const st=hstate(d.resethunt);Object.values(st.found).forEach(f=>delBlob(f.id));S.hunts[d.resethunt]={found:{},ticks:{},hints:{}};confirmKey=null;save();toast('Jeu remis à zéro');return render()}
   if(d.owner!==undefined){view.owner=d.owner;ready=null;busy=null;confirmKey=null;return render()}
+  if(d.excl!==undefined){const own=view.owner||'',V=view.name==='visit'?S.archive.find(x=>x.id===view.id):null,box=V?(V.excl=V.excl||{}):(S.excl=S.excl||{}),arr=box[own]=box[own]||[];
+    const i=arr.indexOf(d.excl);if(i>=0)arr.splice(i,1);else arr.push(d.excl);save();ready=null;busy=null;return render()}
   if(d.tpl){S.pdfTpl=d.tpl;save();ready=null;busy=null;return render()}
   if(d.repick!==undefined){sheet={type:'repick',key:d.repick};return render()}
   if(d.setpick){const own=view.owner;if(!own)return;
