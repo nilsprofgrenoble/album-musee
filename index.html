@@ -26,6 +26,14 @@
   --body:"Atkinson Hyperlegible",system-ui,sans-serif;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
+/* Ambiance par type de musée : seules les couleurs, le fond et les formes du bandeau changent */
+:root[data-pack="moderne"]{--wall:#FFFFFF;--wall-2:#F1F1F1;--ink:#111111;--ink-soft:#4D4D4D;--gold:#111111;--gold-2:#F7C31C;--cobalt:#111111;--yellow:#F7C31C;--coral:#E4202A;--coral-2:#A8141C;--green:#2340C8;--line:#D6D6D6;--tint-y:#FFF3CC;--tint-b:#E6E6E6;--tint-g:#E3E8FA}
+:root[data-pack="nature"]{--wall:#FBFDF8;--wall-2:#EAF3E4;--ink:#16241B;--ink-soft:#4B5F52;--gold:#1F6B45;--gold-2:#E3B93C;--cobalt:#1F6B45;--yellow:#E3B93C;--coral:#D9622B;--coral-2:#A8431A;--green:#4F8A3A;--ok:#2F7A3E;--line:#CBDDC8;--tint-y:#FBF1CF;--tint-b:#DCEBDD;--tint-g:#E6F0D2}
+:root[data-pack="archeo"]{--wall:#FFFBF4;--wall-2:#F6EBDD;--ink:#2B1D14;--ink-soft:#6A5546;--gold:#8A4B2A;--gold-2:#E0A83A;--cobalt:#8A4B2A;--yellow:#E0A83A;--coral:#B8431F;--coral-2:#8E3014;--green:#5E7F6B;--line:#E6D5C0;--tint-y:#FBEBC8;--tint-b:#F1DFCC;--tint-g:#DDE8DF}
+:root[data-pack="sciences"]{--wall:#F7FBFE;--wall-2:#E4F0F9;--ink:#10243A;--ink-soft:#4A6075;--gold:#0E6BA8;--gold-2:#FFC93C;--cobalt:#0E6BA8;--yellow:#FFC93C;--coral:#F0541E;--coral-2:#B93A10;--green:#128579;--line:#C9DDEC;--tint-y:#FFF1C9;--tint-b:#DCEBF6;--tint-g:#D5EEEA}
+:root[data-pack="chateau"]{--wall:#FFFAF5;--wall-2:#F4E9EE;--ink:#2A1426;--ink-soft:#66506A;--gold:#6B2D5C;--gold-2:#D4A537;--cobalt:#6B2D5C;--yellow:#D4A537;--coral:#B3322F;--coral-2:#862220;--green:#2F6B5A;--line:#E3D3DD;--tint-y:#F8EACB;--tint-b:#EBDCE6;--tint-g:#D9E7E1}
+:root[data-pack="monde"]{--wall:#FFFCF6;--wall-2:#E2F1EF;--ink:#102A29;--ink-soft:#4C6867;--gold:#0F766E;--gold-2:#F2A900;--cobalt:#0F766E;--yellow:#F2A900;--coral:#D6336C;--coral-2:#A21F50;--green:#6A3FA0;--line:#CDE3E0;--tint-y:#FDEEC4;--tint-b:#D5ECE9;--tint-g:#E6DCF2}
+.frame:nth-child(4n+2) .glyph{background:color-mix(in srgb,var(--coral) 16%,#fff)}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--wall);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;
@@ -84,7 +92,7 @@ button:focus-visible,input:focus-visible,label:focus-visible{outline:3px solid v
 .frame.empty{background:var(--card);border:3px dashed var(--ink);transform:none}
 .frame.empty .pic{background:var(--card)}
 .frame .glyph{font-size:3.4rem;line-height:1;width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:var(--tint-y)}
-.frame:nth-child(4n+2) .glyph{background:#FDE2DB}.frame:nth-child(4n+3) .glyph{background:var(--tint-b)}.frame:nth-child(4n) .glyph{background:var(--tint-g)}
+.frame:nth-child(4n+3) .glyph{background:var(--tint-b)}.frame:nth-child(4n) .glyph{background:var(--tint-g)}
 .frame .chip{position:absolute;left:0;top:0;width:50px;height:50px;border-radius:50%;background:var(--card);border:3px solid var(--ink);
   display:grid;place-items:center;font-size:1.8rem;transform:translate(-22%,-22%)}
 .frame .cartel{background:var(--card);border-radius:14px;padding:6px 9px 7px;display:flex;flex-direction:column;gap:1px;line-height:1.2;color:var(--ink)}
@@ -100,7 +108,7 @@ button:focus-visible,input:focus-visible,label:focus-visible{outline:3px solid v
 /* barre photo */
 .bar{position:fixed;left:0;right:0;bottom:0;z-index:15;display:flex;justify-content:center;
   padding:22px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
-  background:linear-gradient(to top,var(--wall) 60%,rgba(228,236,238,0))}
+  background:linear-gradient(to top,var(--wall) 60%,transparent)}
 .shoot{display:flex;align-items:center;gap:12px;background:var(--coral);color:#fff;border-radius:999px;padding:12px 28px 12px 14px;
   font-family:var(--display);font-size:1.45rem;font-weight:800;box-shadow:0 6px 0 var(--coral-2),0 10px 20px rgba(0,0,0,.2);cursor:pointer;position:relative}
 .shoot:active{transform:translateY(3px);box-shadow:0 3px 0 var(--coral-2)}
@@ -126,6 +134,12 @@ button:focus-visible,input:focus-visible,label:focus-visible{outline:3px solid v
 .band .blob1{position:absolute;right:-30px;top:-24px;width:170px;height:200px}
 .band .blob2{position:absolute;right:110px;bottom:-30px;width:90px;height:90px}
 .band + .visitcard{margin-top:-30px}
+.band.compact{padding:20px max(20px, env(safe-area-inset-left,0px)) 40px}
+.band.compact h1{font-size:2.1rem}
+.band.compact .blob1{right:-62px;top:-40px}.band.compact .blob2{right:70px;bottom:-46px}
+.band .blob1 path,.band .blob1 polygon,.band .blob1 rect{fill:var(--yellow)}
+.band .blob1 .b2{fill:var(--coral)}.band .blob2 circle{fill:var(--coral)}
+.packtag{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;background:var(--tint-y);border:2px solid var(--ink);border-radius:999px;padding:3px 12px 3px 8px;font-weight:800;font-size:.8rem;margin:4px 0}
 .visitcard{background:var(--card);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:12px;border:3px solid var(--ink);position:relative}
 .stamp{position:absolute;right:14px;top:14px;width:64px;height:64px;border-radius:50%;border:3px solid var(--coral);color:var(--coral-2);
   display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--display);font-size:1.3rem;line-height:1;transform:rotate(-12deg)}
@@ -320,6 +334,19 @@ const PACKS=[
  {id:'tous',icon:'🏛️',name:'Pour tous les musées',cats:[
   ['😂','Le plus rigolo'],['😱','Celui qui fait le plus peur'],['🤔',"Celui qu'on ne comprend pas"],['😍','Le plus beau'],
   ['⏳','Le plus vieux'],['🔍','Le plus petit détail'],['📏','Le plus grand'],['🏠',"Celui qu'on voudrait chez nous"]]}];
+/* Ambiance de chaque type de musée : accroche du bandeau et grande forme décorative */
+const THEMES={
+ peinture:{tag:'Visiter un musée en famille',color:'#2340C8',deco:'<path d="M88 6c18 20 6 40 24 52s40-4 44 18-26 24-22 46 32 26 18 46-40 0-56 14-14 22-30 18c-10-28 10-46-4-66S18 120 26 96s40-18 40-42S70 22 88 6z"/>'},
+ tous:{tag:'Visiter un musée en famille',color:'#2340C8',deco:'<path d="M88 6c18 20 6 40 24 52s40-4 44 18-26 24-22 46 32 26 18 46-40 0-56 14-14 22-30 18c-10-28 10-46-4-66S18 120 26 96s40-18 40-42S70 22 88 6z"/>'},
+ moderne:{tag:"Regarder l'art d'aujourd'hui",color:'#111111',deco:'<rect x="40" y="0" width="84" height="84"/><polygon class="b2" points="20,200 150,200 85,100"/>'},
+ nature:{tag:'Expédition au muséum',color:'#1F6B45',deco:'<path d="M85 8C152 42 160 124 85 192 10 124 18 42 85 8z"/><path class="b2" d="M82 40h6v150h-6z"/>'},
+ archeo:{tag:'Sur les traces du passé',color:'#8A4B2A',deco:'<path d="M62 8h46v24c0 12 28 22 28 62 0 48-22 90-51 100-29-10-51-52-51-100 0-40 28-50 28-62z"/><path class="b2" d="M44 86h82v14H44zM48 120h74v12H48z"/>'},
+ sciences:{tag:'Curieux de sciences',color:'#0E6BA8',deco:'<polygon points="85,4 158,46 158,128 85,170 12,128 12,46"/><polygon class="b2" points="85,60 121,81 121,123 85,144 49,123 49,81"/>'},
+ chateau:{tag:'Visite du château',color:'#6B2D5C',deco:'<path d="M26 200V84a59 59 0 0 1 118 0v116z"/><path class="b2" d="M60 200v-70a25 25 0 0 1 50 0v70z"/>'},
+ monde:{tag:'Voyage autour du monde',color:'#0F766E',deco:'<polygon points="85,2 168,100 85,198 2,100"/><polygon class="b2" points="85,52 122,100 85,148 48,100"/>'}};
+function theme(){return THEMES[S.pack]||THEMES.peinture}
+function applyTheme(){const id=THEMES[S.pack]?S.pack:'peinture';document.documentElement.dataset.pack=id;
+  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=theme().color}
 function applyPack(id){const pk=PACKS.find(p=>p.id===id);if(!pk)return 0;
   const kept=S.cats.filter(c=>c.photos.length),names=new Set(kept.map(c=>c.name));
   const fresh=pk.cats.filter(([i,n])=>!names.has(n)).slice(0,Math.max(0,pk.cats.length-kept.length)).map(([i,n])=>({id:uid(),icon:i,name:n,photos:[],votes:{},winner:null}));
@@ -863,14 +890,15 @@ const INTRO=[
   ['🧭','Bonus : le jeu de piste',"Pour le musée de Grenoble, des cartes font chercher les chefs-d'œuvre avec de petites missions. Le bouton 🔊 les lit aux enfants."]];
 function welcomeView(){
   const nb=S.cats.reduce((a,c)=>a+c.photos.length,0),n=filled(),h=HUNTS[0],hn=Object.keys(hstate(h.id).found).length;
-  const going=S.setupDone;
-  return `<header class="band"><svg class="blob1" viewBox="0 0 170 200" aria-hidden="true"><path d="M88 6c18 20 6 40 24 52s40-4 44 18-26 24-22 46 32 26 18 46-40 0-56 14-14 22-30 18c-10-28 10-46-4-66S18 120 26 96s40-18 40-42S70 22 88 6z" fill="#F7C31C"/></svg><svg class="blob2" viewBox="0 0 90 90" aria-hidden="true"><circle cx="45" cy="45" r="40" fill="#EE4B2B"/></svg>
-      <p>Visiter un musée en famille</p><h1>Album<br>du musée</h1></header>
+  const going=S.setupDone,th=theme(),pk=PACKS.find(x=>x.id===S.pack)||PACKS[0];
+  return `<header class="band ${going?'compact':''}"><svg class="blob1" viewBox="0 0 170 200" aria-hidden="true">${th.deco}</svg><svg class="blob2" viewBox="0 0 90 90" aria-hidden="true"><circle cx="45" cy="45" r="40"/></svg>
+      <p>${th.tag}</p><h1>${going?'Album du musée':'Album<br>du musée'}</h1></header>
     ${going?`<section class="visitcard">
         <span class="stamp" aria-label="${n} étoiles sur ${S.cats.length}">${n}/${S.cats.length}<small>étoiles</small></span>
         <div class="row" style="flex-wrap:nowrap;align-items:center;padding-right:70px">
           ${S.familyPhoto?`<img data-pid="${S.familyPhoto.id}" alt="" class="vthumb">`:`<span class="vthumb glyph">🏛️</span>`}
           <div class="grow"><div class="eyebrow">${nb?'Visite en cours':'Visite préparée'}</div><h2>${esc(S.title)}</h2>
+            <span class="packtag"><span aria-hidden="true">${pk.icon}</span>${esc(pk.name)}</span>
             <span class="vstars">${'★'.repeat(n)}<span>${'★'.repeat(Math.max(0,S.cats.length-n))}</span></span>
             <small class="note">${nb?`${nb} photo${nb>1?'s':''} · ${n} cadre${n>1?'s':''} rempli${n>1?'s':''} sur ${S.cats.length}`:`${S.cats.length} cadres à remplir`}</small></div></div>
         <button class="btn big coral" data-go="home">${nb?'Reprendre la visite':'Commencer la visite'}</button>
@@ -878,15 +906,16 @@ function welcomeView(){
           <button class="btn ghost small" data-newvisit>Nouvelle visite</button></div></section>`
       :`<section class="visitcard"><h2>Première visite ?</h2><p class="note">On prépare l'album ensemble à la maison, en 2 minutes : le musée, qui vient, les cadres à remplir.</p>
         <button class="btn big coral" data-go="setup">Préparer la visite</button></section>`}
-    <section class="how"><h3>Comment ça marche</h3>
+    ${going?'':`<section class="how"><h3>Comment ça marche</h3>
       <div class="howrow"><div><span>1</span><strong>Préparer</strong><small>les cadres à remplir</small></div>
         <div><span>2</span><strong>Photographier</strong><small>une étoile par cadre</small></div>
         <div><span>3</span><strong>Voter</strong><small>et garder l'album</small></div></div>
-      <button class="btn ghost small" data-go="intro">📘 Le mode d'emploi en 4 écrans</button></section>
+      <button class="btn ghost small" data-go="intro">📘 Le mode d'emploi en 4 écrans</button></section>`}
     <div class="list">
       <button class="item" data-hunt="${h.id}"><span class="glyph">🧭</span><span class="grow">Jeu de piste : ${esc(h.title)}<br><small class="note">${h.cards.length} chefs-d'œuvre à retrouver</small></span><span class="state ${hn?'ok':''}">${hn?'★'.repeat(hn):''}</span></button>
       <button class="item" data-go="carnet"><span class="glyph">📖</span><span class="grow">Le carnet des visites<br><small class="note">${S.archive.length?`${S.archive.length} visite${S.archive.length>1?'s':''} gardée${S.archive.length>1?'s':''}`:'vos albums terminés'}</small></span></button>
-      <button class="item" data-go="setup"><span class="glyph">⚙️</span><span class="grow">Famille, cadres et réglages<br><small class="note">mise en commun, galerie, écran allumé</small></span></button>
+      <button class="item" data-go="setup"><span class="glyph">⚙️</span><span class="grow">Famille, cadres et réglages<br><small class="note">type de musée, mise en commun, galerie</small></span></button>
+      ${going?`<button class="item" data-go="intro"><span class="glyph">📘</span><span class="grow">Le mode d'emploi<br><small class="note">4 écrans pour tout revoir</small></span></button>`:''}
     </div>`;
 }
 function introView(){
@@ -1323,7 +1352,7 @@ function barHTML(){
 }
 function render(){
   const v={home:homeView,cat:catView,vote:voteView,ballot:ballotView,final:finalView,setup:setupView,carnet:carnetView,visit:visitView,intro:introView,welcome:welcomeView,hunts:huntsView,hunt:huntView,clue:clueView}[view.name]||homeView;
-  $('#app').innerHTML=v();
+  applyTheme();$('#app').innerHTML=v();
   const bar=barHTML();$('#bar').innerHTML=bar;$('#bar').hidden=!bar;document.body.classList.toggle('has-bar',!!bar);
   $('#sheet').innerHTML=sheetHTML();
   hydrate(document.body);popId=null;updateWake();
