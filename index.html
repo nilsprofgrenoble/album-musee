@@ -144,6 +144,11 @@ button:focus-visible,input:focus-visible,label:focus-visible{outline:3px solid v
 .ihead{display:flex;gap:12px;align-items:center}.ihead .ico{font-size:2rem;width:52px;height:52px;border-radius:50%;background:var(--tint-y);display:grid;place-items:center;flex:none}
 .ibit{background:var(--wall-2);border-radius:14px;padding:8px 12px;font-size:.92rem}.ibit strong{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--coral-2)}
 a.btn{text-decoration:none;display:inline-block}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tile{display:flex;flex-direction:column;gap:2px;text-align:left;background:var(--card);border:2.5px solid var(--ink);border-radius:18px;padding:12px;line-height:1.2}
+.tile .ti{font-size:2rem;line-height:1;margin-bottom:4px}.tile strong{font-size:1rem}.tile small{font-size:.8rem;color:var(--ink-soft)}
+.link{color:var(--ink);font-weight:700;text-decoration:underline;text-underline-offset:3px;padding:6px 2px;font-size:.92rem}
+.smalllinks{justify-content:center;gap:4px 16px}
 .packtag{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;background:var(--tint-y);border:2px solid var(--ink);border-radius:999px;padding:3px 12px 3px 8px;font-weight:800;font-size:.8rem;margin:4px 0}
 .visitcard{background:var(--card);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:12px;border:3px solid var(--ink);position:relative}
 .stamp{position:absolute;right:14px;top:14px;width:64px;height:64px;border-radius:50%;border:3px solid var(--coral);color:var(--coral-2);
@@ -967,35 +972,33 @@ const INTRO=[
   ['🗳️','On vote, on garde',"À la fin, chacun vote en secret pour la photo qu'on garde dans chaque cadre. L'album va dans le carnet, et on peut en faire un PDF."],
   ['🧭','Bonus : le jeu de piste',"Pour le musée de Grenoble, des cartes font chercher les chefs-d'œuvre avec de petites missions. Le bouton 🔊 les lit aux enfants."]];
 function welcomeView(){
-  const nb=S.cats.reduce((a,c)=>a+c.photos.length,0),n=filled(),h=HUNTS[0],hn=Object.keys(hstate(h.id).found).length;
-  const going=S.setupDone,th=theme(),pk=PACKS.find(x=>x.id===S.pack)||PACKS[0];
-  return `<header class="band ${going?'compact':''}"><svg class="blob1" viewBox="0 0 170 200" aria-hidden="true">${th.deco}</svg><svg class="blob2" viewBox="0 0 90 90" aria-hidden="true"><circle cx="45" cy="45" r="40"/></svg>
-      <p>${th.tag}</p><h1>${going?'Album du musée':'Album<br>du musée'}</h1></header>
-    ${going?`<section class="visitcard">
-        <span class="stamp" aria-label="${n} étoiles sur ${S.cats.length}">${n}/${S.cats.length}<small>étoiles</small></span>
-        <div class="row" style="flex-wrap:nowrap;align-items:center;padding-right:70px">
-          ${S.familyPhoto?`<img data-pid="${S.familyPhoto.id}" alt="" class="vthumb">`:`<span class="vthumb glyph">🏛️</span>`}
-          <div class="grow"><div class="eyebrow">${nb?'Visite en cours':'Visite préparée'}</div><h2>${esc(S.title)}</h2>
-            <span class="packtag"><span aria-hidden="true">${pk.icon}</span>${esc(pk.name)}</span>
-            <span class="vstars">${'★'.repeat(n)}<span>${'★'.repeat(Math.max(0,S.cats.length-n))}</span></span>
-            <small class="note">${nb?`${nb} photo${nb>1?'s':''} · ${n} cadre${n>1?'s':''} rempli${n>1?'s':''} sur ${S.cats.length}`:`${S.cats.length} cadres à remplir`}</small></div></div>
-        <button class="btn big coral" data-go="home">${nb?'Reprendre la visite':'Commencer la visite'}</button>
-        <div class="row"><button class="btn ghost small" data-go="setup">Modifier la préparation</button>
-          <button class="btn ghost small" data-newvisit>Nouvelle visite</button></div></section>`
-      :`<section class="visitcard"><h2>Première visite ?</h2><p class="note">On prépare l'album ensemble à la maison, en 2 minutes : le musée, qui vient, les cadres à remplir.</p>
-        <button class="btn big coral" data-go="setup">Préparer la visite</button></section>`}
-    ${going?'':`<section class="how"><h3>Comment ça marche</h3>
-      <div class="howrow"><div><span>1</span><strong>Préparer</strong><small>les cadres à remplir</small></div>
-        <div><span>2</span><strong>Photographier</strong><small>une étoile par cadre</small></div>
-        <div><span>3</span><strong>Voter</strong><small>et garder l'album</small></div></div>
-      <button class="btn ghost small" data-go="intro">📘 Le mode d'emploi en 4 écrans</button></section>`}
-    <div class="list">
-      <button class="item" data-hunt="${h.id}"><span class="glyph">🧭</span><span class="grow">Jeu de piste : ${esc(h.title)}<br><small class="note">${h.cards.length} chefs-d'œuvre à retrouver</small></span><span class="state ${hn?'ok':''}">${hn?'★'.repeat(hn):''}</span></button>
-      <button class="item" data-go="ideas"><span class="glyph">🗺️</span><span class="grow">Idées de sorties<br><small class="note">9 musées autour de Grenoble, avec cadres et défis</small></span></button>
-      <button class="item" data-go="carnet"><span class="glyph">📖</span><span class="grow">Le carnet des visites<br><small class="note">${S.archive.length?`${S.archive.length} visite${S.archive.length>1?'s':''} gardée${S.archive.length>1?'s':''}`:'vos albums terminés'}</small></span></button>
-      <button class="item" data-go="setup"><span class="glyph">⚙️</span><span class="grow">Famille, cadres et réglages<br><small class="note">type de musée, mise en commun, galerie</small></span></button>
-      ${going?`<button class="item" data-go="intro"><span class="glyph">📘</span><span class="grow">Le mode d'emploi<br><small class="note">4 écrans pour tout revoir</small></span></button>`:''}
-    </div>`;
+  const nb=S.cats.reduce((x,c)=>x+c.photos.length,0),n=filled(),tot=S.cats.length,going=S.setupDone,th=theme(),pk=PACKS.find(x=>x.id===S.pack)||PACKS[0];
+  const h=HUNTS.find(x=>x.title===S.title),hn=h?Object.keys(hstate(h.id).found).length:0;
+  const band=`<header class="band ${going?'compact':''}"><svg class="blob1" viewBox="0 0 170 200" aria-hidden="true">${th.deco}</svg><svg class="blob2" viewBox="0 0 90 90" aria-hidden="true"><circle cx="45" cy="45" r="40"/></svg>
+      <p>${th.tag}</p><h1>${going?'Album du musée':'Album<br>du musée'}</h1></header>`;
+  if(!going) return band+`<section class="visitcard"><h2>Une visite au musée, en jeu</h2>
+      <p class="note">Les enfants cherchent des œuvres, vous les photographiez, et la famille vote pour les plus belles photos.</p>
+      <button class="btn big coral" data-go="setup">Préparer ma première visite</button></section>
+    <section class="how"><h3>En trois temps</h3>
+      <div class="howrow"><div><span>1</span><strong>Préparer</strong><small>le musée et les cadres, à la maison</small></div>
+        <div><span>2</span><strong>Photographier</strong><small>une étoile à gagner par cadre</small></div>
+        <div><span>3</span><strong>Voter</strong><small>et garder l'album</small></div></div></section>
+    <div class="tiles"><button class="tile" data-go="ideas"><span class="ti">🗺️</span><strong>Idées de sorties</strong><small>des musées autour de Grenoble</small></button>
+      <button class="tile" data-go="intro"><span class="ti">📘</span><strong>Mode d'emploi</strong><small>4 écrans pour tout comprendre</small></button></div>`;
+  return band+`<section class="visitcard">
+      <span class="stamp" aria-label="${n} étoiles sur ${tot}">${n}/${tot}<small>étoiles</small></span>
+      <div style="padding-right:76px"><div class="eyebrow">${nb?'Visite en cours':'Prochaine visite'}</div><h2>${esc(S.title)}</h2>
+        <span class="packtag"><span aria-hidden="true">${pk.icon}</span>${esc(pk.name)}</span>
+        <small class="note">${nb?`${nb} photo${nb>1?'s':''} · ${n} cadre${n>1?'s':''} rempli${n>1?'s':''} sur ${tot}`:`${tot} cadres à remplir`}</small></div>
+      <button class="btn big coral" data-go="home">${nb?'Reprendre la visite':'Partir en visite'}</button>
+      ${nb?`<button class="btn ghost" data-go="vote">C'est fini : on vote 🗳️</button>`:''}
+      <div class="row"><button class="link" data-go="setup">Changer de musée ou de cadres</button></div></section>
+    <div class="tiles">
+      <button class="tile" data-go="ideas"><span class="ti">🗺️</span><strong>Idées de sorties</strong><small>choisir un autre musée</small></button>
+      <button class="tile" data-go="carnet"><span class="ti">📖</span><strong>Carnet</strong><small>${S.archive.length?`${S.archive.length} visite${S.archive.length>1?'s':''} gardée${S.archive.length>1?'s':''}`:'vos albums terminés'}</small></button>
+      ${h?`<button class="tile" data-hunt="${h.id}"><span class="ti">🧭</span><strong>Jeu de piste</strong><small>${hn?`${hn} sur ${h.cards.length} trouvées`:`${h.cards.length} chefs-d'œuvre à retrouver`}</small></button>`:''}
+    </div>
+    <div class="row smalllinks"><button class="link" data-newvisit>Nouvelle visite</button><button class="link" data-go="setup">Réglages et deux téléphones</button><button class="link" data-go="intro">Mode d'emploi</button></div>`;
 }
 function introView(){
   const k=view.step||0,[ic,t,p]=INTRO[k],last=k===INTRO.length-1;
