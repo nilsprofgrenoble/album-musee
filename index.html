@@ -174,7 +174,7 @@ span.vthumb{display:grid;place-items:center;font-size:2.4rem;background:var(--wa
 .chipbtn.incl:not(.on){opacity:.6;text-decoration:line-through}
 .albpick,.tplpick{display:flex;flex-direction:column;gap:10px}
 .chips{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;margin:0 -2px;scrollbar-width:none}
-.chips.wrap{flex-wrap:wrap;overflow:visible}
+.chips.wrap{flex-wrap:wrap;overflow:visible}.chips.wrap .chipbtn{max-width:100%;flex:0 1 auto}
 .chipbtn{flex:none;display:flex;align-items:center;gap:8px;padding:6px 16px 6px 6px;border-radius:999px;border:2.5px solid var(--line);background:var(--card);font-weight:700;text-align:left;line-height:1.1}
 .chipbtn small{display:block;font-weight:400;font-size:.72rem;color:var(--ink-soft)}
 .chipbtn.on{border-color:var(--ink);background:var(--tint-y)}
@@ -1176,14 +1176,17 @@ function setupView(){
   return `
     <div><div class="eyebrow">À la maison, avant de partir</div><h1>Préparer la visite</h1></div>
     <section class="step"><div class="row"><span class="num">1</span><h3>Quel musée ?</h3></div>
-      <div class="field"><input type="text" id="title" value="${esc(S.title)}" aria-label="Nom du musée"></div></section>
+      <p class="note">Un musée de Grenoble et alentours : on choisit aussi son type de cadres.</p>
+      <div class="chips wrap">${IDEAS.map(i=>`<button class="chipbtn ${S.title===i.name&&S.pack===i.pack?'on':''}" data-setidea="${i.id}" aria-pressed="${S.title===i.name&&S.pack===i.pack}"><span aria-hidden="true">${i.icon}</span><span>${esc(i.name)}</span></button>`).join('')}</div>
+      <p class="note">Ou un autre musée, à vous de le nommer :</p>
+      <div class="field"><input type="text" id="title" value="${esc(S.title)}" aria-label="Nom du musée"></div>
+      <p class="note">Et son genre, pour avoir des cadres adaptés :</p>
+      <div class="packs">${PACKS.map(p=>`<button class="pack ${S.pack===p.id?'on':''}" data-pack="${p.id}" aria-pressed="${S.pack===p.id}"><span aria-hidden="true">${p.icon}</span>${esc(p.name)}</button>`).join('')}</div></section>
     <section class="step"><div class="row"><span class="num">2</span><h3>Qui vient ?</h3></div>
       <p class="note">Touchez l'animal pour le changer : les petits se reconnaissent sans savoir lire.</p>
       <div class="list">${fam}</div><button class="btn ghost small" data-addfam>+ Ajouter quelqu'un</button></section>
     <section class="step"><div class="row"><span class="num">3</span><h3>Les cadres à remplir</h3></div>
-      <p class="note">Quel genre de musée ? On vous propose des cadres qui aident à regarder ce qu'il y a à y voir.</p>
-      <div class="packs">${PACKS.map(p=>`<button class="pack ${S.pack===p.id?'on':''}" data-pack="${p.id}" aria-pressed="${S.pack===p.id}"><span aria-hidden="true">${p.icon}</span>${esc(p.name)}</button>`).join('')}</div>
-      <p class="note">Ensuite, choisissez-les ensemble : on peut en retirer, en ajouter, les renommer. Touchez le pictogramme pour le changer.</p>
+      <p class="note">Ces cadres aident à regarder ce qu'il y a à voir. Choisissez-les ensemble : on peut en retirer, en ajouter, les renommer. Touchez le pictogramme pour le changer.</p>
       <div class="list">${cats}</div><button class="btn ghost small" data-addcat>+ Ajouter un cadre</button></section>
     <section class="step"><h3>Deux téléphones ?</h3>
       <p class="note">Préparez sur un seul téléphone, puis envoyez la préparation à l'autre : les deux auront les mêmes cadres.</p>
@@ -1580,6 +1583,8 @@ document.addEventListener('click',e=>{
   if(d.addfam!==undefined){const k=S.family.length;S.family.push({id:uid(),name:'',icon:ANIMALS[(k+4)%ANIMALS.length],color:COLORS[k%COLORS.length]});save();render();
     const inp=$('#fam-'+S.family[k].id);inp&&inp.focus();return}
   if(d.delfam){S.family=S.family.filter(m=>m.id!==d.delfam);S.cats.forEach(c=>{delete c.votes[d.delfam]});save();return render()}
+  if(d.setidea){const i=IDEAS.find(x=>x.id===d.setidea);if(!i)return;
+    S.title=i.name;const k=applyPack(i.pack);save();toast(k?`${i.name} : cadres changés (${k} avec photos gardé${k>1?'s':''})`:`${i.name} : cadres prêts`);return render()}
   if(d.idea){const i=IDEAS.find(x=>x.id===d.idea);if(!i)return;
     if(S.cats.some(c=>c.photos.length)){toast('Une visite est en cours');return}
     S.title=i.name;applyPack(i.pack);S.setupDone=true;save();toast('Visite préparée : '+i.name);return go({name:'welcome'})}
