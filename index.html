@@ -398,8 +398,8 @@ const IDEAS=[
   info:"Fermé le mardi. Pas d'ascenseur.",url:'https://musees.isere.fr'}
 ];
 function theme(){return THEMES[S.pack]||THEMES.peinture}
-function applyTheme(){const id=THEMES[S.pack]?S.pack:'peinture';document.documentElement.dataset.pack=id;
-  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=theme().color}
+function applyTheme(pk){pk=pk||S.pack;const id=THEMES[pk]?pk:'peinture';document.documentElement.dataset.pack=id;
+  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=THEMES[id].color}
 function applyPack(id){const pk=PACKS.find(p=>p.id===id);if(!pk)return 0;
   const kept=S.cats.filter(c=>c.photos.length),names=new Set(kept.map(c=>c.name));
   const fresh=pk.cats.filter(([i,n])=>!names.has(n)).slice(0,Math.max(0,pk.cats.length-kept.length)).map(([i,n])=>({id:uid(),icon:i,name:n,photos:[],votes:{},winner:null}));
@@ -556,17 +556,17 @@ const nextUndecided=()=>S.cats.find(c=>!decided(c));
 function pickFor(c,mid,picks){const ok=id=>id&&c.photos.find(p=>p.id===id);
   return ok(picks&&picks[c.id])||ok(c.votes&&c.votes[mid])||[...c.photos].reverse().find(p=>p.by===mid)||winnerOf(c)||c.photos[c.photos.length-1]||null}
 function currentModel(owner){const all=S.cats.flatMap(c=>c.photos),om=owner?member(owner):null,picks=om?((S.picks||{})[owner]||{}):null;
-  return {id:'',title:S.title,owner:om?owner:'',ownerM:om||null,familyPhoto:S.familyPhoto||null,date:all.length?Math.min(...all.map(p=>p.ts)):Date.now(),family:S.family,stars:filled(),total:S.cats.length,
+  return {id:'',pack:S.pack||'peinture',title:S.title,owner:om?owner:'',ownerM:om||null,familyPhoto:S.familyPhoto||null,date:all.length?Math.min(...all.map(p=>p.ts)):Date.now(),family:S.family,stars:filled(),total:S.cats.length,
     cats:S.cats.map(c=>{const win=winnerOf(c)||c.photos[c.photos.length-1]||null;return {key:c.id,icon:c.icon,name:c.name,photos:c.photos,photo:om?pickFor(c,owner,picks):winnerOf(c),famWin:win,excluded:((S.excl||{})[om?owner:'']||[]).includes(c.id)}})}}
 function visitModel(v,owner){const om=owner?v.family.find(m=>m.id===owner):null;
-  return {id:v.id,title:v.title,owner:om?owner:'',ownerM:om||null,familyPhoto:v.familyPhoto||null,date:v.date,family:v.family,stars:v.stars,total:v.total,
+  return {id:v.id,pack:v.pack||'peinture',title:v.title,owner:om?owner:'',ownerM:om||null,familyPhoto:v.familyPhoto||null,date:v.date,family:v.family,stars:v.stars,total:v.total,
     cats:v.cats.map((c,i)=>{const ok=id=>id&&c.photos.find(p=>p.id===id),win=ok(c.winner)||c.photos[c.photos.length-1]||null;
       const ph=om?(ok((c.picks||{})[owner])||[...c.photos].reverse().find(p=>p.by===owner)||win):win;
       return {key:String(i),icon:c.icon,name:c.name,photos:c.photos,photo:ph,famWin:win,excluded:((v.excl||{})[om?owner:'']||[]).includes(String(i))}})}}
 function archiveCurrent(){
   const all=S.cats.flatMap(c=>c.photos); if(!all.length){if(S.familyPhoto)delBlob(S.familyPhoto.id);return false}
   const filledCats=S.cats.filter(c=>c.photos.length),excl=Object.fromEntries(Object.entries(S.excl||{}).map(([o,ids])=>[o,ids.map(id=>filledCats.findIndex(c=>c.id===id)).filter(i=>i>=0).map(String)]));
-  S.archive.unshift({id:uid(),excl,title:S.title,familyPhoto:S.familyPhoto||null,date:Math.min(...all.map(p=>p.ts)),stars:filled(),total:S.cats.length,
+  S.archive.unshift({id:uid(),excl,pack:S.pack||'peinture',title:S.title,familyPhoto:S.familyPhoto||null,date:Math.min(...all.map(p=>p.ts)),stars:filled(),total:S.cats.length,
     family:S.family.map(m=>({id:m.id,name:m.name,icon:m.icon,color:m.color})),
     cats:S.cats.filter(c=>c.photos.length).map(c=>({icon:c.icon,name:c.name,photos:c.photos.map(p=>({id:p.id,by:p.by,ts:p.ts})),winner:(winnerOf(c)||coverOf(c)).id,picks:Object.fromEntries(S.family.map(m=>[m.id,(pickFor(c,m.id,(S.picks||{})[m.id])||{}).id]))}))});
   return true;
@@ -618,7 +618,7 @@ const R_DECOUPE={
   foot(x,M,n,tot){T(x,M.title,80,PH-48,'700 22px '+F.atk,K.soft,null,PW-300);T(x,`${n} / ${tot}`,PW-80,PH-48,'700 22px '+F.atk,K.soft,'right')},
   async front(M,I,tot){const [cv,x]=newPage('#FFFFFF'),om=I.om;
     x.fillStyle=K.main;x.fillRect(0,0,PW,940);
-    x.save();x.translate(780,-130);x.scale(3.4,3.4);x.fillStyle=K.yel;x.fill(new Path2D(theme().d||BLOB));x.restore();
+    x.save();x.translate(780,-130);x.scale(3.4,3.4);x.fillStyle=K.yel;x.fill(new Path2D((THEMES[M.pack]||theme()).d||BLOB));x.restore();
     disc(x,170,930,150,K.coral);
     x.save();x.translate(1120,900);x.rotate(-.5);x.fillStyle=K.green;x.beginPath();x.ellipse(0,0,150,68,0,0,Math.PI*2);x.fill();x.restore();
     T(x,I.date.toUpperCase(),100,140,'700 30px '+F.atk,'#FFFFFF');
@@ -823,7 +823,10 @@ async function makePDF(M,tpl){
 let ready=null,busy=null;
 function modelFor(vid,owner){const V=vid&&S.archive.find(x=>x.id===vid);return V?visitModel(V,owner):currentModel(owner)}
 function exportKey(kind,vid){return kind==='backup'?'backup:':kind+':'+vid+':'+(view.owner||'')+(kind==='pdf'?':'+(S.pdfTpl||'decoupe'):'')}
-async function buildFiles(kind,vid,owner){const M0=modelFor(vid,owner),M=Object.assign({},M0,{cats:M0.cats.filter(c=>!c.excluded)});M.total=M.cats.length;M.stars=M.cats.filter(c=>c.photo).length;const base=`${slug(M.title)}${M.ownerM?'-'+slug(M.ownerM.name):''}-${stamp()}`;
+async function buildFiles(kind,vid,owner){
+  const M00=modelFor(vid,owner);if(kind==='pdf'||kind==='img'){applyTheme(M00.pack);try{return await buildFiles2(kind,vid,owner)}finally{applyTheme()}}
+  return buildFiles2(kind,vid,owner)}
+async function buildFiles2(kind,vid,owner){const M0=modelFor(vid,owner),M=Object.assign({},M0,{cats:M0.cats.filter(c=>!c.excluded)});M.total=M.cats.length;M.stars=M.cats.filter(c=>c.photo).length;const base=`${slug(M.title)}${M.ownerM?'-'+slug(M.ownerM.name):''}-${stamp()}`;
   if(kind==='pdf') return [new File([await makePDF(M,S.pdfTpl||'decoupe')],`album-${base}.pdf`,{type:'application/pdf'})];
   if(kind==='img') return [new File([await albumImage(M)],`album-${base}.jpg`,{type:'image/jpeg'})];
   if(kind==='backup') return [await makeBackup()];
@@ -1428,7 +1431,7 @@ function barHTML(){
 }
 function render(){
   const v={home:homeView,cat:catView,vote:voteView,ballot:ballotView,final:finalView,setup:setupView,carnet:carnetView,visit:visitView,intro:introView,welcome:welcomeView,ideas:ideasView,hunts:huntsView,hunt:huntView,clue:clueView}[view.name]||homeView;
-  applyTheme();$('#app').innerHTML=v();
+  const vv=view.name==='visit'&&S.archive.find(x=>x.id===view.id);applyTheme(vv?vv.pack||'peinture':null);$('#app').innerHTML=v();
   const bar=barHTML();$('#bar').innerHTML=bar;$('#bar').hidden=!bar;document.body.classList.toggle('has-bar',!!bar);
   $('#sheet').innerHTML=sheetHTML();
   hydrate(document.body);popId=null;updateWake();
