@@ -139,6 +139,11 @@ button:focus-visible,input:focus-visible,label:focus-visible{outline:3px solid v
 .band.compact .blob1{right:-62px;top:-40px}.band.compact .blob2{right:70px;bottom:-46px}
 .band .blob1 path,.band .blob1 polygon,.band .blob1 rect{fill:var(--yellow)}
 .band .blob1 .b2{fill:var(--coral)}.band .blob2 circle{fill:var(--coral)}
+.idea{background:var(--card);border:3px solid var(--ink);border-radius:22px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.idea p{margin:0}.ideas{display:flex;flex-direction:column;gap:14px}
+.ihead{display:flex;gap:12px;align-items:center}.ihead .ico{font-size:2rem;width:52px;height:52px;border-radius:50%;background:var(--tint-y);display:grid;place-items:center;flex:none}
+.ibit{background:var(--wall-2);border-radius:14px;padding:8px 12px;font-size:.92rem}.ibit strong{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--coral-2)}
+a.btn{text-decoration:none;display:inline-block}
 .packtag{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;background:var(--tint-y);border:2px solid var(--ink);border-radius:999px;padding:3px 12px 3px 8px;font-weight:800;font-size:.8rem;margin:4px 0}
 .visitcard{background:var(--card);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:12px;border:3px solid var(--ink);position:relative}
 .stamp{position:absolute;right:14px;top:14px;width:64px;height:64px;border-radius:50%;border:3px solid var(--coral);color:var(--coral-2);
@@ -344,6 +349,54 @@ const THEMES={
  sciences:{d:'M85 4L158 46V128L85 170 12 128V46z',tag:'Curieux de sciences',color:'#0E6BA8',deco:'<polygon points="85,4 158,46 158,128 85,170 12,128 12,46"/><polygon class="b2" points="85,60 121,81 121,123 85,144 49,123 49,81"/>'},
  chateau:{d:'M26 200V84a59 59 0 0 1 118 0v116z',tag:'Visite du château',color:'#6B2D5C',deco:'<path d="M26 200V84a59 59 0 0 1 118 0v116z"/><path class="b2" d="M60 200v-70a25 25 0 0 1 50 0v70z"/>'},
  monde:{d:'M85 2L168 100 85 198 2 100z',tag:'Voyage autour du monde',color:'#0F766E',deco:'<polygon points="85,2 168,100 85,198 2,100"/><polygon class="b2" points="85,52 122,100 85,148 48,100"/>'}};
+/* Idées de sorties autour de Grenoble. Infos relevées en 2026 (annuaires et sites officiels) : à confirmer avant d'y aller. Cadres et défis : propositions de l'appli. */
+const IDEAS=[
+ {id:'mdg',icon:'🖼️',name:'Musée de Grenoble',where:'Grenoble',pack:'peinture',price:'Collections permanentes gratuites',
+  pitch:"Le grand classique, et le terrain de jeu de l'appli : de vrais chefs-d'œuvre, des salles qui se visitent en une heure, un audioguide gratuit.",
+  frame:'« La plus rigolote » : un visage ou une scène qui fait rire les enfants.',
+  quest:"Le jeu de piste de l'appli : 9 détails d'œuvres célèbres à retrouver dans les salles.",
+  info:'Fermé le mardi. Ateliers en famille parfois payants.',url:'https://www.museedegrenoble.fr'},
+ {id:'museum',icon:'🦖',name:'Muséum de Grenoble',where:'Grenoble, au bord du Jardin des Plantes',pack:'nature',price:'Gratuit',
+  pitch:"La sortie idéale quand il pleut : animaux de montagne, minéraux, fossiles, et une salle pensée pour les tout-petits où l'on touche et on joue. Le Jardin des Plantes est à côté pour finir.",
+  frame:'« Celui qui se cache le mieux » : un animal de la salle de la montagne dont on aurait raté le camouflage.',
+  quest:"Dans la salle des cristaux, retrouver un cristal de la couleur du pull de chacun.",
+  info:"Fermé le lundi. Ouvert l'après-midi seulement le week-end. Accessible, ascenseur et toilettes.",url:'https://www.alpes-isere.com/patrimoine-culturel/museum-de-grenoble'},
+ {id:'dauphinois',icon:'🏔️',name:'Musée dauphinois',where:'Grenoble, ancien couvent',pack:'archeo',price:'Gratuit',
+  pitch:"Un ancien couvent sur la colline, avec un jardin et des tables de pique-nique. On y découvre la vie d'autrefois dans les Alpes : de quoi comparer avec nos maisons.",
+  frame:"« Un objet qu'on utilise encore aujourd'hui » : un outil ou un objet de montagne qui n'a presque pas changé.",
+  quest:"Chercher l'objet le plus vieux, puis deviner à quoi il servait avant de lire le cartel.",
+  info:'Fermé le lundi. Étages par escaliers : poussette à laisser en bas.',url:'https://musees.isere.fr'},
+ {id:'saintlaurent',icon:'🏺',name:'Musée archéologique Saint-Laurent',where:'Grenoble, quartier Saint-Laurent',pack:'archeo',price:'Gratuit',
+  pitch:"Une vraie crypte vieille de plus de mille ans, sous les pieds. L'ambiance de fouille plaît aux curieux, et l'on y vit un peu l'aventure.",
+  frame:"« Le plus vieil objet de la visite » : à trouver, et à comparer avec ce qu'on a à la maison.",
+  quest:"Dans la crypte, chercher le détail le plus vieux et le plus abîmé, puis imaginer à quoi servait ce lieu.",
+  info:"Fermé le lundi. Prévoir un gilet, il fait frais. Escaliers et passages étroits, pas de toilettes sur place.",url:'https://musees.isere.fr'},
+ {id:'eveche',icon:'⛪',name:"Musée de l'Ancien Évêché",where:'Grenoble, près de la cathédrale',pack:'archeo',price:'Gratuit',
+  pitch:"Un baptistère enterré, que l'on rejoint par un escalier : une petite aventure souterraine, et un livret-jeu pour les enfants.",
+  frame:"« Une écriture qu'on ne sait pas lire » ou « Celui qui fait un peu peur ».",
+  quest:"Demander le livret-jeu à l'accueil et le remplir à deux équipes.",
+  info:'Fermé le mardi. Baptistère souterrain par escaliers.',url:'https://musees.isere.fr'},
+ {id:'magasin',icon:'🟥',name:'Le Magasin, centre d’art contemporain',where:'Grenoble, esplanade Andry-Farcy',pack:'moderne',price:'Payant pour les adultes, gratuit pour les moins de 26 ans et le premier dimanche du mois',
+  pitch:"Un grand hangar où l'art est parfois étrange, géant, ou fait de presque rien. Terrain idéal pour demander aux enfants : « et toi, tu comprends quoi ? »",
+  frame:"« Celle qu'on ne comprend pas du tout » : chacun invente ce que ça raconte, puis on compare.",
+  quest:"Chacun donne un titre à une œuvre, puis on le compare à son vrai titre.",
+  info:'Fermé le lundi et le mardi. Expositions qui changent : consulter le site avant.',url:'https://www.evous.fr/grenoble/musees-gratuits/'},
+ {id:'champollion',icon:'𓂀',name:'Musée Champollion',where:'Vif, à 15 km de Grenoble',pack:'archeo',price:'Gratuit',
+  pitch:"La maison d'enfance du déchiffreur des hiéroglyphes. Un petit musée, un parc, et des activités sur l'Égypte en été.",
+  frame:"« Une écriture qu'on ne sait pas lire » : parfait pour ce lieu.",
+  quest:"Recopier un hiéroglyphe sur un papier, et le faire deviner à la maison.",
+  info:'Fermé le mardi. Compter environ 1 h 30. Ascenseur.',url:'https://musees.isere.fr'},
+ {id:'vizille',icon:'🏰',name:'Domaine de Vizille',where:'Vizille, à 20 km de Grenoble',pack:'chateau',price:'Gratuit, parc compris',
+  pitch:"Un château, un grand parc avec un lac et des animaux : les enfants courent, les parents visitent. Le château abrite le musée de la Révolution française, mais c'est surtout une belle journée dehors.",
+  frame:"« Un animal caché dans la décoration » : plafonds, cheminées, tableaux.",
+  quest:"Chercher la pièce où l'on aimerait dormir, et défendre son choix au vote.",
+  info:'Fermé le mardi. Parking gratuit, coin pique-nique, café.',url:'https://musees.isere.fr'},
+ {id:'hebert',icon:'🌳',name:'Musée Hébert',where:'La Tronche',pack:'chateau',price:'Gratuit',
+  pitch:"La maison du peintre Ernest Hébert, avec 2,5 hectares de parc : portraits et paysages le matin, pique-nique et jeux ensuite.",
+  frame:"« Le portrait le plus sérieux » : et si on essayait de faire la même tête ?",
+  quest:"Imiter le visage d'un portrait, et faire deviner lequel.",
+  info:"Fermé le mardi. Pas d'ascenseur.",url:'https://musees.isere.fr'}
+];
 function theme(){return THEMES[S.pack]||THEMES.peinture}
 function applyTheme(){const id=THEMES[S.pack]?S.pack:'peinture';document.documentElement.dataset.pack=id;
   const m=document.querySelector('meta[name=theme-color]');if(m)m.content=theme().color}
@@ -867,6 +920,24 @@ function starsBlock(){
     <small>${complete()?'Album complet ! La grande étoile est à vous.':`Encore ${t-n} cadre${t-n>1?'s':''} pour la grande étoile`}</small></div>
     <span class="bonus ${complete()?'on':''}" aria-hidden="true">★</span></section>`;
 }
+function ideasView(){
+  const nb=S.cats.reduce((a,c)=>a+c.photos.length,0);
+  const cards=IDEAS.map(i=>{const pk=PACKS.find(x=>x.id===i.pack);
+    return `<article class="idea"><div class="ihead"><span class="ico" aria-hidden="true">${i.icon}</span><div><h3>${esc(i.name)}</h3><small class="note">${esc(i.where)}</small></div></div>
+      <span class="packtag">${esc(i.price)}</span>
+      <p>${esc(i.pitch)}</p>
+      <p class="ibit"><strong>Un cadre à trouver</strong>${esc(i.frame)}</p>
+      <p class="ibit"><strong>Un défi</strong>${esc(i.quest)}</p>
+      <small class="note">${esc(i.info)}</small>
+      <div class="row"><button class="btn small coral" data-idea="${i.id}" ${nb?'disabled':''}>Préparer cette visite</button>
+        <a class="btn ghost small" href="${esc(i.url)}" target="_blank" rel="noopener">Horaires et infos</a></div>
+      <small class="note">Cadres proposés : ${pk.icon} ${esc(pk.name)}</small></article>`}).join('');
+  return `<button class="back" data-go="welcome">← Accueil</button>
+    <header><div class="eyebrow">Autour de Grenoble</div><h1>Idées de sorties</h1>
+      <p class="note">Des musées gratuits ou presque, choisis pour des enfants de 3 à 8 ans. Horaires et tarifs relevés en 2026 : à vérifier avant de partir.</p></header>
+    ${nb?`<p class="tip">Une visite est en cours. Terminez-la, ou touchez « Nouvelle visite » à l'accueil, pour préparer une autre sortie.</p>`:''}
+    <div class="ideas">${cards}</div>`;
+}
 function homeView(){
   const frames=S.cats.map((c,i)=>{
     const p=coverOf(c),fm=p&&member(p.by);
@@ -917,6 +988,7 @@ function welcomeView(){
       <button class="btn ghost small" data-go="intro">📘 Le mode d'emploi en 4 écrans</button></section>`}
     <div class="list">
       <button class="item" data-hunt="${h.id}"><span class="glyph">🧭</span><span class="grow">Jeu de piste : ${esc(h.title)}<br><small class="note">${h.cards.length} chefs-d'œuvre à retrouver</small></span><span class="state ${hn?'ok':''}">${hn?'★'.repeat(hn):''}</span></button>
+      <button class="item" data-go="ideas"><span class="glyph">🗺️</span><span class="grow">Idées de sorties<br><small class="note">9 musées autour de Grenoble, avec cadres et défis</small></span></button>
       <button class="item" data-go="carnet"><span class="glyph">📖</span><span class="grow">Le carnet des visites<br><small class="note">${S.archive.length?`${S.archive.length} visite${S.archive.length>1?'s':''} gardée${S.archive.length>1?'s':''}`:'vos albums terminés'}</small></span></button>
       <button class="item" data-go="setup"><span class="glyph">⚙️</span><span class="grow">Famille, cadres et réglages<br><small class="note">type de musée, mise en commun, galerie</small></span></button>
       ${going?`<button class="item" data-go="intro"><span class="glyph">📘</span><span class="grow">Le mode d'emploi<br><small class="note">4 écrans pour tout revoir</small></span></button>`:''}
@@ -1355,7 +1427,7 @@ function barHTML(){
     return `<button class="tab ${on?'on':''}" data-tab="${t[0]}">${svgIcon(t[0])}${t[2]}</button>`}).join('')}</nav>`;
 }
 function render(){
-  const v={home:homeView,cat:catView,vote:voteView,ballot:ballotView,final:finalView,setup:setupView,carnet:carnetView,visit:visitView,intro:introView,welcome:welcomeView,hunts:huntsView,hunt:huntView,clue:clueView}[view.name]||homeView;
+  const v={home:homeView,cat:catView,vote:voteView,ballot:ballotView,final:finalView,setup:setupView,carnet:carnetView,visit:visitView,intro:introView,welcome:welcomeView,ideas:ideasView,hunts:huntsView,hunt:huntView,clue:clueView}[view.name]||homeView;
   applyTheme();$('#app').innerHTML=v();
   const bar=barHTML();$('#bar').innerHTML=bar;$('#bar').hidden=!bar;document.body.classList.toggle('has-bar',!!bar);
   $('#sheet').innerHTML=sheetHTML();
@@ -1505,6 +1577,9 @@ document.addEventListener('click',e=>{
   if(d.addfam!==undefined){const k=S.family.length;S.family.push({id:uid(),name:'',icon:ANIMALS[(k+4)%ANIMALS.length],color:COLORS[k%COLORS.length]});save();render();
     const inp=$('#fam-'+S.family[k].id);inp&&inp.focus();return}
   if(d.delfam){S.family=S.family.filter(m=>m.id!==d.delfam);S.cats.forEach(c=>{delete c.votes[d.delfam]});save();return render()}
+  if(d.idea){const i=IDEAS.find(x=>x.id===d.idea);if(!i)return;
+    if(S.cats.some(c=>c.photos.length)){toast('Une visite est en cours');return}
+    S.title=i.name;applyPack(i.pack);S.setupDone=true;save();toast('Visite préparée : '+i.name);return go({name:'welcome'})}
   if(d.pack){const k=applyPack(d.pack);toast(k?`Cadres changés (${k} cadre${k>1?'s':''} avec photos gardé${k>1?'s':''})`:'Cadres changés');return render()}
   if(d.addcat!==undefined){const c={id:uid(),icon:'✨',name:'',photos:[],votes:{},winner:null};S.cats.push(c);S.celebrated=false;save();render();
     const inp=$('#cat-'+c.id);inp&&inp.focus();return}
