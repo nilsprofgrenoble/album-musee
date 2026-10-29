@@ -144,6 +144,10 @@ span.vthumb{display:grid;place-items:center;font-size:2.4rem;background:var(--wa
 .modebtn{display:flex;flex-direction:column;gap:2px;text-align:left;padding:10px 12px;border-radius:16px;border:2.5px solid var(--line);background:var(--card);line-height:1.15}
 .modebtn small{font-size:.75rem;color:var(--ink-soft)}
 .modebtn.on{border-color:var(--ink);background:var(--tint-y)}
+.packs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.pack{display:flex;align-items:center;gap:8px;text-align:left;padding:8px 10px;border-radius:14px;border:2.5px solid var(--line);background:var(--card);font-weight:700;font-size:.85rem;line-height:1.15}
+.pack span{font-size:1.5rem;flex:none}
+.pack.on{border-color:var(--ink);background:var(--tint-y)}
 /* albums et styles de PDF */
 .frame.excluded{opacity:.32;filter:grayscale(1)}
 .chipbtn.incl{padding:8px 14px 8px 8px;font-size:.85rem}
@@ -291,12 +295,41 @@ const DEFAULT_CATS=[
   ['😂','La plus rigolote'],['😱','Celle qui fait le plus peur'],['🤔',"Celle qu'on ne comprend pas"],
   ['😍','La plus belle'],['🐾',"Celle avec le plus d'animaux"],['🏠',"Celle où on aimerait vivre"],
   ['🎨','La plus colorée'],['🗿','La sculpture la plus bizarre']];
+/* Jeux de cadres par type de musée : chaque cadre donne à l'enfant une raison de regarder, de comparer, puis d'argumenter au vote */
+const PACKS=[
+ {id:'peinture',icon:'🖼️',name:'Peinture et sculpture',cats:DEFAULT_CATS},
+ {id:'moderne',icon:'🟥',name:'Art moderne et contemporain',cats:[
+  ['🤔',"Celle qu'on ne comprend pas du tout"],['🖐️',"Celle qu'on pourrait faire nous-mêmes… ou pas !"],['🎨','Celle avec le plus de couleurs'],
+  ['⬜','Celle où il n’y a presque rien'],['🔺','Celle faite seulement de formes'],['🧱','Celle faite avec un matériau bizarre'],
+  ['💬','Celle qui fait penser à autre chose'],['😍','La plus belle']]},
+ {id:'nature',icon:'🦖',name:'Histoire naturelle',cats:[
+  ['🦖',"L'animal disparu le plus impressionnant"],['🦷','Les dents les plus effrayantes'],['🐜','Le plus petit animal'],['🐘','Le plus grand animal'],
+  ['🦎','Celui qui se cache le mieux'],['🌈','Le plus coloré'],['🦴','Un squelette : devine qui c’était !'],['🏡','Celui qui pourrait vivre près de chez nous']]},
+ {id:'archeo',icon:'🏺',name:'Archéologie et histoire',cats:[
+  ['❓',"L'objet dont on ne devine pas l'usage"],['⏳','Le plus vieil objet de la visite'],['🍽️',"Un objet qu'on utilise encore aujourd'hui"],['🧸',"Un jouet ou un objet d'enfant"],
+  ['👑','Le plus précieux'],['🛡️','Un objet pour se battre ou se protéger'],['😱','Celui qui fait un peu peur'],['✍️',"Une écriture qu'on ne sait pas lire"]]},
+ {id:'sciences',icon:'⚙️',name:'Sciences et techniques',cats:[
+  ['⚙️','La machine la plus bizarre'],['🚀','Celle qui va le plus vite'],['🔊','Celle qui fait du bruit, ou qui en faisait'],['🧪','Une manip qu’on a essayée nous-mêmes'],
+  ['💡',"L'invention qu'on utilise tous les jours"],['⏳','Le plus vieil objet'],['🤯',"Celle dont on ne comprend pas comment elle marche"],['🏆',"Celle qu'on voudrait à la maison"]]},
+ {id:'chateau',icon:'🏰',name:'Château et patrimoine',cats:[
+  ['🛏️','La pièce où on aimerait dormir'],['🧐','Le portrait le plus sérieux'],['🐉','Un animal caché dans la décoration'],['🪑','L’objet le plus bizarre'],
+  ['✨','Ce qui brille le plus'],['🚪','Une porte ou un passage secret'],['🍷','La plus belle vaisselle'],['🕯️',"Ce qu'on ne trouve plus dans nos maisons"]]},
+ {id:'monde',icon:'🌍',name:'Arts du monde',cats:[
+  ['🎭','Le masque le plus impressionnant'],['🥁','Un instrument de musique'],['🧵','Le plus beau tissu'],['🌍','Ce qui vient du plus loin'],
+  ['🎉','Un objet pour une fête'],['🏠',"Un objet de la maison, ailleurs dans le monde"],['❓',"Celui dont on ne devine pas l'usage"],['😍','Le plus beau']]},
+ {id:'tous',icon:'🏛️',name:'Pour tous les musées',cats:[
+  ['😂','Le plus rigolo'],['😱','Celui qui fait le plus peur'],['🤔',"Celui qu'on ne comprend pas"],['😍','Le plus beau'],
+  ['⏳','Le plus vieux'],['🔍','Le plus petit détail'],['📏','Le plus grand'],['🏠',"Celui qu'on voudrait chez nous"]]}];
+function applyPack(id){const pk=PACKS.find(p=>p.id===id);if(!pk)return 0;
+  const kept=S.cats.filter(c=>c.photos.length),names=new Set(kept.map(c=>c.name));
+  const fresh=pk.cats.filter(([i,n])=>!names.has(n)).slice(0,Math.max(0,pk.cats.length-kept.length)).map(([i,n])=>({id:uid(),icon:i,name:n,photos:[],votes:{},winner:null}));
+  S.cats=[...kept,...fresh];S.pack=id;S.celebrated=false;save();return kept.length}
 function freshState(prev){
   return {
     title: prev?prev.title:'Musée de Grenoble',
     family: prev?prev.family:[['Papa','🦊'],['Maman','🐻'],['Enfant 1','🐰'],['Enfant 2','🐼']].map(([n,i],k)=>({id:uid(),name:n,icon:i,color:COLORS[k]})),
     cats: (prev?prev.cats.map(c=>[c.icon,c.name]):DEFAULT_CATS).map(([i,n])=>({id:uid(),icon:i,name:n,photos:[],votes:{},winner:null})),
-    celebrated:false, voteCelebrated:false, gallery: prev?prev.gallery!==false:true, voteMode: prev?(prev.voteMode||'rapide'):'rapide', setupDone: prev?!!prev.setupDone:false, archive: prev?(prev.archive||[]):[], familyPhoto:null, picks:{}, excl:{}, pdfTpl: prev?(prev.pdfTpl||'decoupe'):'decoupe', hunts: prev?(prev.hunts||{}):{}, onboarded: prev?!!prev.onboarded:false, keepAwake: prev?prev.keepAwake:true, lastBackup: prev?prev.lastBackup:null, backupCount: prev?prev.backupCount:0, lastHunt: prev?prev.lastHunt:null
+    celebrated:false, voteCelebrated:false, gallery: prev?prev.gallery!==false:true, voteMode: prev?(prev.voteMode||'rapide'):'rapide', setupDone: prev?!!prev.setupDone:false, archive: prev?(prev.archive||[]):[], familyPhoto:null, picks:{}, excl:{}, pdfTpl: prev?(prev.pdfTpl||'decoupe'):'decoupe', pack: prev?(prev.pack||'peinture'):'peinture', hunts: prev?(prev.hunts||{}):{}, onboarded: prev?!!prev.onboarded:false, keepAwake: prev?prev.keepAwake:true, lastBackup: prev?prev.lastBackup:null, backupCount: prev?prev.backupCount:0, lastHunt: prev?prev.lastHunt:null
   };
 }
 /* ---------- stockage (mêmes clés que la version précédente) ---------- */
@@ -305,6 +338,7 @@ try{S=JSON.parse(localStorage.getItem('albumMusee')||'null')}catch(e){S=null}
 if(!S) S=freshState();
 if(S.gallery===undefined) S.gallery=true;
 if(!S.voteMode) S.voteMode='rapide';
+if(!S.pack) S.pack='peinture';
 if(!Array.isArray(S.archive)) S.archive=[];
 if(S.setupDone===undefined) S.setupDone=S.cats.some(c=>c.photos.length);
 S.family.forEach((m,i)=>{if(!m.icon)m.icon=ANIMALS[i%ANIMALS.length]});
@@ -823,7 +857,7 @@ function homeView(){
        :`<p class="tip">👇 Repérez une œuvre qui va dans un cadre, puis touchez le gros bouton photo. Sans flash !</p>`}`;
 }
 const INTRO=[
-  ['🏛️','Un album à remplir au musée',"Avant de partir, on choisit ensemble les cadres : la plus rigolote, celle qui fait peur, la plus belle…"],
+  ['🏛️','Un album à remplir au musée',"Avant de partir, on choisit le genre de musée et les cadres : la plus rigolote, celle qui fait peur, l'animal disparu le plus impressionnant…"],
   ['📷','On photographie, on range',"Au musée, quelqu'un repère une œuvre ? Gros bouton photo, on choisit le cadre et qui l'a trouvée. Chaque cadre rempli donne une étoile."],
   ['🗳️','On vote, on garde',"À la fin, chacun vote en secret pour la photo qu'on garde dans chaque cadre. L'album va dans le carnet, et on peut en faire un PDF."],
   ['🧭','Bonus : le jeu de piste',"Pour le musée de Grenoble, des cartes font chercher les chefs-d'œuvre avec de petites missions. Le bouton 🔊 les lit aux enfants."]];
@@ -1039,7 +1073,9 @@ function setupView(){
       <p class="note">Touchez l'animal pour le changer : les petits se reconnaissent sans savoir lire.</p>
       <div class="list">${fam}</div><button class="btn ghost small" data-addfam>+ Ajouter quelqu'un</button></section>
     <section class="step"><div class="row"><span class="num">3</span><h3>Les cadres à remplir</h3></div>
-      <p class="note">Choisissez-les ensemble. Touchez le pictogramme pour le changer.</p>
+      <p class="note">Quel genre de musée ? On vous propose des cadres qui aident à regarder ce qu'il y a à y voir.</p>
+      <div class="packs">${PACKS.map(p=>`<button class="pack ${S.pack===p.id?'on':''}" data-pack="${p.id}" aria-pressed="${S.pack===p.id}"><span aria-hidden="true">${p.icon}</span>${esc(p.name)}</button>`).join('')}</div>
+      <p class="note">Ensuite, choisissez-les ensemble : on peut en retirer, en ajouter, les renommer. Touchez le pictogramme pour le changer.</p>
       <div class="list">${cats}</div><button class="btn ghost small" data-addcat>+ Ajouter un cadre</button></section>
     <section class="step"><h3>Deux téléphones ?</h3>
       <p class="note">Préparez sur un seul téléphone, puis envoyez la préparation à l'autre : les deux auront les mêmes cadres.</p>
@@ -1436,6 +1472,7 @@ document.addEventListener('click',e=>{
   if(d.addfam!==undefined){const k=S.family.length;S.family.push({id:uid(),name:'',icon:ANIMALS[(k+4)%ANIMALS.length],color:COLORS[k%COLORS.length]});save();render();
     const inp=$('#fam-'+S.family[k].id);inp&&inp.focus();return}
   if(d.delfam){S.family=S.family.filter(m=>m.id!==d.delfam);S.cats.forEach(c=>{delete c.votes[d.delfam]});save();return render()}
+  if(d.pack){const k=applyPack(d.pack);toast(k?`Cadres changés (${k} cadre${k>1?'s':''} avec photos gardé${k>1?'s':''})`:'Cadres changés');return render()}
   if(d.addcat!==undefined){const c={id:uid(),icon:'✨',name:'',photos:[],votes:{},winner:null};S.cats.push(c);S.celebrated=false;save();render();
     const inp=$('#cat-'+c.id);inp&&inp.focus();return}
   if(d.delcat){const c=cat(d.delcat);
